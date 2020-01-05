@@ -1,0 +1,108 @@
+upstream app_production {
+    server app-production:8080;
+}
+
+server {
+
+    listen 443 ssl;
+    server_name www.example.org;
+
+    access_log /proc/self/fd/1;
+    error_log /proc/self/fd/2 error;
+    #error_log /proc/self/fd/2 debug;
+
+    ssl_certificate /etc/letsencrypt/selfsigned/www.example.org/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/selfsigned/www.example.org/privkey.pem;
+    #include /etc/letsencrypt/options-ssl-nginx.conf;
+    #ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers EECDH+AESGCM:EDH+AESGCM;
+    ssl_prefer_server_ciphers on;
+    ssl_ecdh_curve secp384r1;
+    ssl_session_timeout 10m;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_tickets off;
+    #ssl_session_tickets on;
+    #ssl_session_ticket_key /etc/nginx/ssl_session_ticket.key;
+    #ssl_stapling on;
+    #ssl_stapling_verify on;
+    more_set_headers "Strict-Transport-Security: max-age=31536000; includeSubDomains; preload";
+    #add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+
+    root /usr/share/nginx/html;
+
+    #
+    # General
+    #
+
+    gzip on;
+    gzip_types      text/plain text/css application/javascript application/json application/xml;
+    gzip_proxied    no-cache no-store no_last_modified private expired auth;
+    gzip_min_length 256;
+    gzip_comp_level 6;
+
+    more_clear_headers 'X-Powered-By';
+    more_set_headers "X-Frame-Options: DENY";
+    more_set_headers "X-Content-Type-Options: nosniff";
+    more_set_headers "X-XSS-Protection: 1; mode=block;";
+    #more_set_headers "Content-Security-Policy: default-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; script-src 'self'";
+    #more_set_headers "X-Content-Security-Policy: default-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; script-src 'self'";
+    #more_set_headers "X-WebKit-CSP: default-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; script-src 'self'";
+    # nginx-debug doesn not work with headers_more module
+    #add_header X-Frame-Options DENY;
+    #add_header X-Content-Type-Options nosniff;
+    #add_header X-XSS-Protection "1; mode=block;";
+    #add_header Content-Security-Policy "default-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; script-src 'self'";
+    #add_header X-Content-Security-Policy "default-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; script-src 'self'";
+    #add_header X-WebKit-CSP "default-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; script-src 'self'";
+
+    location ~ /\. {
+        deny all;
+    }
+    location = /robots.txt {
+        allow all;
+        log_not_found off;
+        access_log off;
+    }
+    location = /favicon.ico {
+        allow all;
+        log_not_found off;
+        access_log off;
+    }
+
+    #
+    # HTTP Status Codes
+    #
+
+    location ~ /(.+).code$ {
+    }
+
+    #
+    # Application
+    #
+
+    location = / {
+        return 301 https://$host/lip;
+    }
+
+    location /app/ {
+        access_log /proc/self/fd/2 main;
+        #proxy_bind $remote_addr transparent;
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+        proxy_buffering off;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host:$server_port;
+        proxy_set_header X-Forwarded-Port $server_port;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        # Mitigate httpoxy attack
+        proxy_set_header Proxy "";
+        proxy_pass_request_headers on;
+        proxy_pass http://app_production/app/;
+        proxy_redirect default;
+        #proxy_set_header Accept-Encoding "";
+    }
+
+}

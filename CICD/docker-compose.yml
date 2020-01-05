@@ -1,0 +1,108 @@
+version: '3.7'
+
+services:
+  #james:
+  #  image: linagora/james
+  #mailhog:
+  #  build:
+  #    context: mailhog
+  #  image: mikrokosmos/mailhog:latest
+  #  restart: "no"
+  #  ports:
+  #    - "1025:1025"
+  #    - "8025:8025"
+  #  #healthcheck:
+  #  #  test: echo | telnet 127.0.0.1 1025
+  #vault:
+  #  build:
+  #    context: vault
+  #  image: mikrokosmos/vault:latest
+  #  command: server -config=/opt/vault/config/vault-config.json
+  #  cap_add:
+  #    - IPC_LOCK
+  #  networks:
+  #    - cicd
+  #  ports:
+  #    - "8200:8200"
+  #  volumes:
+  #    - vault:/opt/vault:rw
+  sonarqube-db:
+    build:
+      context: sonarqube-db
+    image: mikrokosmos/sonarqube-db:latest
+    restart: "no"
+    networks:
+      - cicd
+    expose:
+      - 5432
+  #sonarqube-db-adminer:
+  #  image: adminer:4.7.5-standalone
+  #  depends_on:
+  #    - sonarqube-db
+  #  restart: "no"
+  #  networks:
+  #    - cicd
+  #  ports:
+  #  - "9001:8080"
+  sonarqube:
+    build:
+      context: sonarqube
+    image: mikrokosmos/sonarqube:latest
+    depends_on:
+      - sonarqube-db
+    restart: "no"
+    environment:
+      - sonar.jdbc.url=jdbc:postgresql://sonarqube-db/sonarqube
+      - sonar.jdbc.username=sonar
+      - sonar.jdbc.password=sonar
+      - sonar.log.console=true
+      #- sonar.web.javaAdditionalOpts=-Djava.security.egd=file:/dev/./urandom
+    volumes:
+      - sonarqube_conf:/opt/sonarqube/conf
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+      - sonarqube_data:/opt/sonarqube/data
+    networks:
+      - cicd
+    ports:
+      - "9000:9000"
+  nexus:
+    build:
+      context: nexus
+    image: mikrokosmos/nexus3:latest
+    restart: "no"
+    environment:
+      - NEXUS_CONTEXT=nexus
+      - NEXUS_DATA=/nexus-data
+      - INSTALL4J_ADD_VM_PARAMS=-Xms1g -Xmx1g -XX:MaxDirectMemorySize=3g -Djava.util.prefs.userRoot=/nexus_data/javaprefs
+    volumes:
+      - nexus_data:/nexus-data
+      - nexus_backup:/nexus-backup
+    networks:
+      - cicd
+    ports:
+      - "8999:8081"
+      - "8998:8998"
+      - "8997:8997"
+
+volumes:
+  sonarqube_conf:
+    driver: local
+  sonarqube_extensions:
+    driver: local
+  sonarqube_logs:
+    driver: local
+  sonarqube_data:
+    driver: local
+  nexus_data:
+    driver: local
+  nexus_backup:
+    driver: local
+  vault:
+    driver: local
+
+networks:
+  cicd:
+    driver: bridge
+    internal: false
+    external: false

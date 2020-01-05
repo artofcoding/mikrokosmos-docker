@@ -1,0 +1,110 @@
+version: '3.7'
+
+services:
+  #admin:
+  #  image: mikrokosmos/alpine-latest-stable:latest
+  #  restart: "always"
+  #  environment:
+  #    - TZ=Europe/Berlin
+  #  volumes:
+  #    - port80_etc_nginx:/etc/nginx:rw
+  #    - port80_certbot:/usr/share/nginx/certbot:rw
+  #  command: tail -f /dev/null
+  port80:
+    build:
+      context: port80
+    image: customer/endpoint-port80:${VERSION}
+    hostname: port80
+    restart: "always"
+    environment:
+      - TZ=Europe/Berlin
+    volumes:
+      - port80_etc_nginx:/etc/nginx:ro
+      - port80_certbot:/usr/share/nginx/certbot:ro
+    networks:
+      - public
+    ports:
+      - "80:80"
+      - "8080:8080"
+  rproxy:
+    build:
+      context: rproxy
+    image: customer/endpoint-rproxy:${VERSION}
+    hostname: rproxy
+    restart: "always"
+    environment:
+      - TZ=Europe/Berlin
+    volumes:
+      - rproxy_etc_nginx:/etc/nginx:ro
+      - rproxy_etc_letsencrypt:/etc/letsencrypt:ro
+      - rproxy_html:/usr/share/nginx/html:ro
+    networks:
+      - development-backend
+      - test-backend
+      - qa-backend
+      - production-backend
+      - public
+    ports:
+      - "443:443"
+      - "8443:8443"
+  rproxy-certbot:
+    build:
+      context: rproxy-certbot
+    image: customer/endpoint-rproxy-certbot:${VERSION}
+    hostname: rproxy-certbot
+    restart: "always"
+    depends_on:
+      - port80
+      - rproxy
+    environment:
+      - TZ=Europe/Berlin
+    volumes:
+      - rproxy_etc_nginx:/etc/nginx:rw
+      - rproxy_etc_letsencrypt:/etc/letsencrypt:rw
+      - port80_certbot:/usr/share/nginx/certbot:rw
+    networks:
+      - outside
+
+volumes:
+  port80_etc_nginx:
+    driver: local
+  port80_certbot:
+    driver: local
+  rproxy_etc_nginx:
+    driver: local
+  rproxy_etc_letsencrypt:
+    driver: local
+  rproxy_html:
+    driver: local
+
+networks:
+  public:
+    name: public
+    driver: bridge
+    external: false
+    internal: false
+  development-backend:
+    name: development-backend
+    driver: bridge
+    external: false
+    internal: true
+  test-backend:
+    name: test-backend
+    driver: bridge
+    external: false
+    internal: true
+  qa-backend:
+    name: qa-backend
+    driver: bridge
+    external: false
+    internal: true
+  production-backend:
+    name: production-backend
+    driver: bridge
+    external: false
+    internal: true
+  outside:
+    name: outside
+    driver: bridge
+    external: false
+    internal: false

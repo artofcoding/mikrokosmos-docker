@@ -1,0 +1,28 @@
+version: '3.7'
+
+services:
+  redis:
+    restart: "always"
+    networks:
+      - qa-backend
+  redis-backup:
+    restart: "always"
+    networks:
+      - qa-backend
+  app:
+    hostname: app-qa
+    restart: "always"
+    networks:
+      qa-backend:
+        aliases:
+          - app-qa
+      outside:
+        aliases:
+          - app-qa
+
+networks:
+  qa-backend:
+    name: qa-backend
+    driver: bridge
+    external: false
+    internal: true

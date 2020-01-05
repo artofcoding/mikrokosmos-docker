@@ -1,0 +1,27 @@
+version: '3.7'
+
+services:
+  rproxy:
+    build:
+      context: rproxy
+    image: mikrokosmos/cicd-rproxy:latest
+    depends_on:
+      - mikrokosmos-nexus
+      - mikrokosmos-sonarqube
+    restart: "no"
+    volumes:
+      - rproxy_etc:/etc/nginx
+    networks:
+      - cicd
+    ports:
+      - "80:80"
+
+volumes:
+  rproxy_etc:
+    driver: local
+
+networks:
+  cicd:
+    driver: bridge
+    internal: false
+    external: false

@@ -1,0 +1,27 @@
+version: '3.7'
+
+services:
+  redis:
+    restart: "always"
+    networks:
+      - production-backend
+  redis-backup:
+    restart: "always"
+    networks:
+      - backend
+  app:
+    restart: "always"
+    networks:
+      backend:
+        aliases:
+          - app-production
+      outside:
+        aliases:
+          - app-production
+
+networks:
+  production-backend:
+    name: production-backend
+    driver: bridge
+    external: false
+    internal: true

@@ -1,0 +1,31 @@
+version: '3.7'
+
+services:
+  redis:
+    restart: "no"
+    networks:
+      - development-backend
+    ports:
+      - "6379:6379"
+  redis-backup:
+    restart: "no"
+    networks:
+      - development-backend
+  app:
+    restart: "no"
+    networks:
+      backend:
+        aliases:
+          - app-development
+      outside:
+        aliases:
+          - app-development
+    ports:
+      - "8180:8080"
+
+networks:
+  development-backend:
+    name: development-backend
+    driver: bridge
+    external: false
+    internal: false

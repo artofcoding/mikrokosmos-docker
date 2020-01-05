@@ -1,0 +1,15 @@
+# See
+# https://gitattributes.io/ and e.g. https://gitattributes.io/api/common,java
+# https://github.com/gitattributes/gitattributes
+
+*               text=auto
+*.conf          text eol=lf
+*.yml           text eol=lf
+*.properties    text eol=lf
+*.sh            text eol=lf
+*.bak           text
+Dockerfile      text eol=lf
+*.nginx         text eol=lf
+
+.gitattributes export-ignore
+.gitignore     export-ignore

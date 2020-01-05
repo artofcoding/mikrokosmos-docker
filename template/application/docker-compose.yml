@@ -1,0 +1,59 @@
+version: '3.7'
+
+services:
+  redis:
+    build:
+      context: ../
+      dockerfile: docker/redis/Dockerfile
+    image: customer/app-redis:${VERSION}
+    environment:
+      - TZ=Europe/Berlin
+    volumes:
+      - redisdata:/data/redis:rw
+    expose:
+      - "6379"
+  redis-backup:
+    build:
+      context: ../
+      dockerfile: docker/redis-backup/Dockerfile
+    image: customer/app-redis-backup:${VERSION}
+    environment:
+      - TZ=Europe/Berlin
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DIR=/data/redis
+      - REDIS_BGSAVE_WAIT=30
+      - BACKUP_DIR=/data/backup
+    volumes:
+      - redisdata:/data/redis:rw
+      - redisbackup:/data/backup:rw
+  app:
+    build:
+      context: ../
+      dockerfile: docker/lip/Dockerfile
+    image: customer/lip-app:${VERSION}
+    depends_on:
+      - redis
+    environment:
+      - TZ=Europe/Berlin
+    volumes:
+      - app:/opt/app:rw
+    networks:
+      - outside
+    expose:
+      - "8080"
+
+volumes:
+  redisdata:
+    driver: local
+  redisbackup:
+    driver: local
+  app:
+    driver: local
+
+networks:
+  outside:
+    name: outside
+    driver: bridge
+    external: false
+    internal: false

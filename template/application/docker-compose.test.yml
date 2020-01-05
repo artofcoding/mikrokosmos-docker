@@ -1,0 +1,28 @@
+version: '3.7'
+
+services:
+  redis:
+    restart: "always"
+    networks:
+      - test-backend
+  redis-backup:
+    restart: "always"
+    networks:
+      - test-backend
+  app:
+    hostname: app-test
+    restart: "always"
+    networks:
+      test-backend:
+        aliases:
+          - app-test
+      outside:
+        aliases:
+          - app-test
+
+networks:
+  test-backend:
+    name: test-backend
+    driver: bridge
+    external: false
+    internal: true
