@@ -1,0 +1,206 @@
+:author: Ralf Bensmann <ralf@art-of-coding.eu>
+:revnumber: DRAFT
+:toc: top
+:toclevels: 3
+
+== Mikrokosmos
+
+This project provides your own Docker-based development and deployment environment.
+
+* *P* roject *M* anagement
+** trac
+** (RedMine)
+** (OpenProject Community)
+* *C* ontinuous *I* ntegration / *C* ontinuous *D* eployment
+** Sonatype Nexus Repository Manager
+** SonarQube
+* Docker Java Project Template
+
+.Requirements
+* 4 GB RAM for Docker
+* Docker >=19.03.5 installed
+
+=== Network Setup
+
+Add this entry to your local host name file.
+
+.UNI*X /etc/hosts
+----
+127.0.0.1  localhost  trac.local  repo.local  quality.local
+----
+
+.macOS /etc/hosts
+----
+127.0.0.1  localhost  <local hostname>  trac.local  repo.local  quality.local
+----
+
+.Windows C:\Windows\drivers\etc\hosts
+----
+127.0.0.1  localhost  repository  quality
+----
+
+=== Setup Mikrokosmos
+
+----
+./deploy.sh
+----
+
+=== Using Mikrokosmos
+
+==== Maven
+
+.Authentication (settings.xml)
+[source,xml,linenum]
+----
+<settings>
+    <servers>
+        <server>
+            <id>nexus-snapshots</id>
+            <username>deploy</username>
+            <password>deploy</password>
+        </server>
+        <server>
+            <id>nexus-releases</id>
+            <username>deploy</username>
+            <password>deploy</password>
+        </server>
+    </servers>
+</settings>
+----
+
+.Maven Central Mirror (settings.xml)
+[source,xml,linenum]
+----
+<settings>
+    <mirrors>
+        <mirror>
+            <id>mirror-central</id>
+            <name>mirror-central</name>
+            <url>http://repo.local/nexus/repository/maven-public/</url>
+            <mirrorOf>central</mirrorOf>
+        </mirror>
+    </mirrors>
+</settings>
+----
+
+.Distribution (pom.xml)
+[source,xml,linenum]
+----
+<project>
+    <distributionManagement>
+        <snapshotRepository>
+            <id>nexus-snapshots</id>
+            <url>http://localhost:8999/nexus/repository/maven-snapshots/</url>
+        </snapshotRepository>
+        <repository>
+            <id>nexus-releases</id>
+            <url>http://localhost:8999/nexus/repository/maven-releases/</url>
+        </repository>
+    </distributionManagement>
+</project>
+----
+
+=== Repository Sonatype Nexus3
+
+.Users & Roles
+* Role `nx-deploy`
+** Rights: `nx-repository-view-*-*-*`
+* User `deploy`
+** Roles: nx-deploy
+
+==== Docker
+
+.Blob Stores
+* docker
+
+.Realms
+* Docker Bearer Token Realm
+
+.General Docker repository settings
+* "Allow anonymous docker pull (Docker Bearer Token Realm required)"
+* "Enable Docker V1 API"
+
+.Pull through Docker Group
+[source,bash]
+----
+docker pull localhost:8997/httpd:2.4-alpine
+----
+
+.Push to private Docker repository
+[source,bash]
+----
+docker tag your-own-image:1 localhost:8998/your-own-image:1
+docker push localhost:8998/your-own-image:1
+----
+
+==== Maven
+
+.Blob Stores
+* maven
+
+.Repositories
+[cols="a,a,a,a",options="header"]
+|====
+| Name
+| Local URL
+| Type
+| Settings
+
+4+| Group "Maven Public" +
+Access through http://repo.local/maven-public/
+
+| Local Maven Releases
+| http://repo.local/maven-releases/
+| hosted
+|
+
+| Local Maven Snapshots
+| http://repo.local/maven-snapshots/
+| hosted
+|
+
+| Maven Central
+| http://repo.local/maven-central/
+| proxy
+| https://repo1.maven.org/maven2/
+
+| JCenter Bintray
+| http://repo.local/maven-bintray/
+| proxy
+| https://jcenter.bintray.com
+
+| Sonatype Snapshots
+| http://repo.local/maven.sonatype-snapshots/
+| proxy
+| https://oss.sonatype.org/content/repositories/snapshots/
+
+4+| Group "Docker" +
+Access through http://repo.local/docker/
+
+| Docker Group
+| http://repo.local/docker/
+| hosted
+| Port 8997
+
+| Docker Private Registry
+| http://repo.local/docker-private/
+| hosted
+| Port 8998
+
+| Docker Hub
+| http://repo.local/docker-hub/
+| proxy
+| https://registry-1.docker.io/ +
+"Use Docker Hub"
+
+| Red Hat Docker Registry
+| http://repo.local/docker-redhat/
+| proxy
+| https://registry.access.redhat.com
+
+|====
+
+==== Resources
+
+* https://blog.sonatype.com/using-nexus-3-as-your-repository-part-1-maven-artifacts[Using Nexus3 as Your Repository - Part 1 Maven Artifacts]
+* https://blog.sonatype.com/using-nexus-3-as-your-repository-part-3-docker-images[Using Nexus3 as Your Repository - Part 3 Docker Images]

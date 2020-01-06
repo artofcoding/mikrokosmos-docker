@@ -1,3 +1,4 @@
+ARG VERSION
 FROM sonatype/nexus3:3.20.0 AS base
 
 LABEL maintainer="Ralf Bensmann <ralf@art-of-coding.eu>"
@@ -33,6 +34,6 @@ USER nexus
 CMD ["sh", "-c", "${SONATYPE_DIR}/start-nexus-repository-manager.sh"]
 
 FROM base
-#ARG timestamp=2019-12-15-08
-#COPY *-${timestamp}*.bak ${NEXUS_DATA}/restore-from-backup/
-EXPOSE 8997 8998 8999
+ARG timestamp=2019-12-15-08
+COPY *-${timestamp}*.bak ${NEXUS_DATA}/restore-from-backup/
+EXPOSE 8081

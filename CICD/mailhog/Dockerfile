@@ -1,4 +1,5 @@
-FROM mikrokosmos/alpine-latest-stable:latest AS base
+ARG VERSION
+FROM mikrokosmos/alpine-latest-stable:${VERSION} AS base
 
 # Install ca-certificates, required for the "release message" feature:
 RUN apk --no-cache add \

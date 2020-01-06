@@ -1,3 +1,4 @@
+ARG VERSION
 FROM nginx:1.17-alpine AS base
 
 LABEL maintainer="Ralf Bensmann <ralf@art-of-coding.eu>"

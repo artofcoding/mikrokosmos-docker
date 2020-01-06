@@ -30,8 +30,8 @@ services:
   app:
     build:
       context: ../
-      dockerfile: docker/lip/Dockerfile
-    image: customer/lip-app:${VERSION}
+      dockerfile: docker/app/Dockerfile
+    image: customer/app:${VERSION}
     depends_on:
       - redis
     environment:

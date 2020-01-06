@@ -13,7 +13,7 @@ services:
   port80:
     build:
       context: port80
-    image: customer/endpoint-port80:${VERSION}
+    image: mikrokosmos/endpoint-port80:${VERSION}
     hostname: port80
     restart: "always"
     environment:
@@ -29,7 +29,7 @@ services:
   rproxy:
     build:
       context: rproxy
-    image: customer/endpoint-rproxy:${VERSION}
+    image: mikrokosmos/endpoint-rproxy:${VERSION}
     hostname: rproxy
     restart: "always"
     environment:
@@ -50,7 +50,7 @@ services:
   rproxy-certbot:
     build:
       context: rproxy-certbot
-    image: customer/endpoint-rproxy-certbot:${VERSION}
+    image: mikrokosmos/endpoint-rproxy-certbot:${VERSION}
     hostname: rproxy-certbot
     restart: "always"
     depends_on:

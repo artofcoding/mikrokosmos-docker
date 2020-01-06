@@ -2,7 +2,10 @@ FROM ruby:2.6.3
 
 LABEL maintainer="Ralf Bensmann <ralf@art-of-coding.eu>"
 LABEL vendor="Art of Coding UG"
-LABEL project="Mikrokosmos CICD"
+LABEL project="Mikrokosmos PM"
+
+ENV TZ Europe/Berlin
+ENV LANG en_US.UTF-8
 
 RUN apt-get update \
     && apt-get install -y \
@@ -21,7 +24,6 @@ RUN gem install \
     rdiscount \
     rouge
 
-COPY compile.sh /root/compile.sh
+COPY compile.sh /
 
-WORKDIR /james-project
-ENTRYPOINT ["/root/compile.sh"]
+CMD ["/compile.sh"]

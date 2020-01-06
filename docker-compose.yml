@@ -4,21 +4,17 @@ services:
   rproxy:
     build:
       context: rproxy
-    image: mikrokosmos/cicd-rproxy:latest
+    image: mikrokosmos/rproxy:${VERSION}
+    restart: unless-stopped
     depends_on:
-      - mikrokosmos-nexus
-      - mikrokosmos-sonarqube
-    restart: "no"
-    volumes:
-      - rproxy_etc:/etc/nginx
+      - trac-myproject
+      - nexus
+      - sonarqube
     networks:
+      - pm
       - cicd
     ports:
-      - "80:80"
-
-volumes:
-  rproxy_etc:
-    driver: local
+    - "80:80"
 
 networks:
   cicd:

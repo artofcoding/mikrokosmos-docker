@@ -7,12 +7,12 @@
 
 DOCKER_IMAGE_PREFIX=mikrokosmos
 CONTAINERS="port80 rproxy rproxy-certbot"
+#CUSTOM_DOMAIN="custom.example.org"
 
 set -o nounset
 set -o errexit
 
-if [[ $# -lt 1 ]]
-then
+function show_usage() {
     echo "usage: $0 init"
     echo "usage: $0 { up | start | stop | restart | down | ps }"
     echo "  start [<service>]"
@@ -25,22 +25,23 @@ then
     echo "  console <service>"
     echo "  console-broken <service>"
     exit 1
-fi
+}
+[[ $# -lt 1 ]] && show_usage
 
 execdir=$(pushd `dirname $0` >/dev/null ; pwd ; popd >/dev/null)
-basedir=$(pushd "${execdir}/../.." >/dev/null ; pwd ; popd >/dev/null)
-dockerdir=$(pushd "${execdir}/.." >/dev/null ; pwd ; popd >/dev/null)
-etcdir=$(pushd "${execdir}/../etc" >/dev/null ; pwd ; popd >/dev/null)
+vardir=$(pushd "${execdir}/var" >/dev/null ; pwd ; popd >/dev/null)
 
 ENV_NAME="endpoint"
 export ENV_NAME
-VERSION=$(cat ${basedir}/.version)
+CURRENT_BRANCH="$(git branch --show-current)"
+HEAD_COMMIT_HASH="$(git rev-parse --short HEAD)"
+VERSION="${CURRENT_BRANCH}-${HEAD_COMMIT_HASH}"
 export VERSION
 
 function endpoint_docker() {
     docker-compose \
         -p ${ENV_NAME} \
-        -f ${dockerdir}/docker-compose.endpoint.yml \
+        -f ${execdir}/docker-compose.yml \
         "$@"
 }
 
@@ -49,6 +50,7 @@ case "${mode}" in
     build-images)
         endpoint_docker build \
             --build-arg ENV_NAME=${ENV_NAME} \
+            --build-arg VERSION=${VERSION} \
             --compress
     ;;
     clean-images)
@@ -74,7 +76,6 @@ case "${mode}" in
         set -o errexit
     ;;
     init)
-        $0 build-images
         endpoint_docker up -d
         endpoint_docker start port80
         endpoint_docker start rproxy-certbot
@@ -82,18 +83,18 @@ case "${mode}" in
         endpoint_docker exec rproxy-certbot /nginx-tls.sh test self-signed
         endpoint_docker exec rproxy-certbot /nginx-tls.sh qa self-signed
         endpoint_docker exec rproxy-certbot /nginx-tls.sh production self-signed
-        # production
-        ls ${HOME}/*.pem >/dev/null 2>&1
-        [[ $? == 0 ]] && cp ${HOME}/*.pem ${etcdir}
-        if [[ -f ${etcdir}/privkey.pem && -f ${etcdir}/intermediate.pem && -f ${etcdir}/server.pem  ]]
+        if [[ -n "${CUSTOM_DOMAIN:-}" ]]
         then
-            domain_cert_path="/etc/letsencrypt/custom/portal.softandcloud.net"
-            endpoint_docker exec rproxy-certbot mkdir -p ${domain_cert_path}
-            rproxycertbot="${ENV_NAME}_rproxy-certbot_1"
-            docker cp ${etcdir}/privkey.pem ${rproxycertbot}:${domain_cert_path}
-            docker cp ${etcdir}/intermediate.pem ${rproxycertbot}:${domain_cert_path}
-            docker cp ${etcdir}/server.pem ${rproxycertbot}:${domain_cert_path}
-            endpoint_docker exec rproxy-certbot /nginx-tls.sh production custom
+            if [[ -f ${vardir}/${CUSTOM_DOMAIN}/privkey.pem && -f ${vardir}/${CUSTOM_DOMAIN}/intermediate.pem && -f ${vardir}/${CUSTOM_DOMAIN}/server.pem  ]]
+            then
+                domain_cert_path="/etc/letsencrypt/custom/${CUSTOM_DOMAIN}"
+                endpoint_docker exec rproxy-certbot mkdir -p ${domain_cert_path}
+                rproxycertbot="${ENV_NAME}_rproxy-certbot_1"
+                docker cp ${vardir}/${CUSTOM_DOMAIN}/privkey.pem ${rproxycertbot}:${domain_cert_path}
+                docker cp ${vardir}/${CUSTOM_DOMAIN}/intermediate.pem ${rproxycertbot}:${domain_cert_path}
+                docker cp ${vardir}/${CUSTOM_DOMAIN}/server.pem ${rproxycertbot}:${domain_cert_path}
+                endpoint_docker exec rproxy-certbot /nginx-tls.sh production custom
+            fi
         fi
     ;;
     up)
@@ -148,8 +149,7 @@ case "${mode}" in
         docker commit "$1" "$1_broken" && docker run -it "$1_broken" sh
     ;;
     *)
-        echo "usage: $0 ..."
-        exit 1
+        show_usage
     ;;
 esac
 

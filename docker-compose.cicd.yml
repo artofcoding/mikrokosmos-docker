@@ -6,8 +6,8 @@ services:
   #mailhog:
   #  build:
   #    context: mailhog
-  #  image: mikrokosmos/mailhog:latest
-  #  restart: "no"
+  #  image: mikrokosmos/cicd-mailhog:${VERSION}
+  #  restart: unless-stopped
   #  ports:
   #    - "1025:1025"
   #    - "8025:8025"
@@ -15,22 +15,23 @@ services:
   #  #  test: echo | telnet 127.0.0.1 1025
   #vault:
   #  build:
-  #    context: vault
-  #  image: mikrokosmos/vault:latest
+  #    context: CICD/vault
+  #  image: mikrokosmos/cicd-vault:${VERSION}
+  #  restart: unless-stopped
   #  command: server -config=/opt/vault/config/vault-config.json
   #  cap_add:
   #    - IPC_LOCK
-  #  networks:
-  #    - cicd
-  #  ports:
-  #    - "8200:8200"
   #  volumes:
   #    - vault:/opt/vault:rw
+  #  networks:
+  #    - cicd
+  #  expose:
+  #    - 8200
   sonarqube-db:
     build:
-      context: sonarqube-db
-    image: mikrokosmos/sonarqube-db:latest
-    restart: "no"
+      context: CICD/sonarqube-db
+    image: mikrokosmos/cicd-sonarqube-db:${VERSION}
+    restart: unless-stopped
     networks:
       - cicd
     expose:
@@ -39,18 +40,18 @@ services:
   #  image: adminer:4.7.5-standalone
   #  depends_on:
   #    - sonarqube-db
-  #  restart: "no"
+  #  restart: unless-stopped
   #  networks:
   #    - cicd
   #  ports:
   #  - "9001:8080"
   sonarqube:
     build:
-      context: sonarqube
-    image: mikrokosmos/sonarqube:latest
+      context: CICD/sonarqube
+    image: mikrokosmos/cicd-sonarqube:${VERSION}
     depends_on:
       - sonarqube-db
-    restart: "no"
+    restart: unless-stopped
     environment:
       - sonar.jdbc.url=jdbc:postgresql://sonarqube-db/sonarqube
       - sonar.jdbc.username=sonar
@@ -68,9 +69,9 @@ services:
       - "9000:9000"
   nexus:
     build:
-      context: nexus
-    image: mikrokosmos/nexus3:latest
-    restart: "no"
+      context: CICD/nexus
+    image: mikrokosmos/cicd-nexus3:${VERSION}
+    restart: unless-stopped
     environment:
       - NEXUS_CONTEXT=nexus
       - NEXUS_DATA=/nexus-data
@@ -81,7 +82,7 @@ services:
     networks:
       - cicd
     ports:
-      - "8999:8081"
+      - "8081:8081"
       - "8998:8998"
       - "8997:8997"
 
@@ -98,8 +99,8 @@ volumes:
     driver: local
   nexus_backup:
     driver: local
-  vault:
-    driver: local
+  #vault:
+  #  driver: local
 
 networks:
   cicd:

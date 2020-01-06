@@ -1,4 +1,5 @@
-FROM alpine:3.11 AS base
+ARG VERSION
+FROM mikrokosmos/alpine-latest-stable:${VERSION} AS base
 
 LABEL maintainer="Ralf Bensmann <ralf@art-of-coding.eu>"
 LABEL vendor="Art of Coding UG"
@@ -8,6 +9,7 @@ ENV VAULT_VERSION 1.1.0
 ENV PATH "/opt/vault:$PATH"
 
 ENV TZ Europe/Berlin
+ENV LANG en_US.UTF-8
 
 RUN apk --no-cache add \
         tzdata \

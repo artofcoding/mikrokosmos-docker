@@ -1,4 +1,5 @@
-FROM mikrokosmos/alpine-latest-stable:latest AS base
+ARG VERSION
+FROM mikrokosmos/alpine-latest-stable:${VERSION} AS base
 
 LABEL maintainer="Ralf Bensmann <ralf@art-of-coding.eu>"
 LABEL vendor="Art of Coding UG"
