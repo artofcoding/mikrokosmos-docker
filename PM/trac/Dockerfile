@@ -5,6 +5,7 @@ LABEL maintainer="Ralf Bensmann <ralf@art-of-coding.eu>"
 LABEL vendor="Art of Coding UG"
 LABEL project="Mikrokosmos PM"
 
+ARG TRAC_VERSION
 ARG TRAC_DATA=/var/trac
 
 RUN apk update \
@@ -13,20 +14,18 @@ RUN apk update \
         curl \
         git \
         subversion \
-        py-pip \
         gcc \
         musl-dev \
+        secpwgen pwgen \
+        py-pip py-setuptools \
         python2-dev \
         postgresql-dev \
-    && pip install babel docutils pygments pytz textile \
+        py-genshi \
+        graphviz
+
+RUN pip install babel docutils pygments pytz textile \
     && pip install psycopg2 \
-    && pip install Trac \
+    && pip install https://download.edgewall.org/trac/Trac-${TRAC_VERSION}.tar.gz \
     && mkdir ${TRAC_DATA}
-
-RUN pip install trac-UserPicturesPlugin
-
-RUN curl -sL \
-        -o ${TRAC_DATA}/trac-digest.py \
-        http://www.agilofortrac.com/en/download/trac-digest.py
 
 VOLUME /var/trac

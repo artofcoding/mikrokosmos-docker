@@ -7,14 +7,25 @@
 
 This project provides your own Docker-based development and deployment environment.
 
+* Docker *Library*
+** Alpine "latest-stable" base image
+** OpenSSH base image
+** PostgreSQL
+** Redis along with backup solution
+** Jekyll
+** asciidoc server
 * *P* roject *M* anagement
 ** trac
-** (RedMine)
-** (OpenProject Community)
+** Redmine
+** (YouTrack)
+** (OpenProject)
 * *C* ontinuous *I* ntegration / *C* ontinuous *D* eployment
+** GitLab Community Edition
 ** Sonatype Nexus Repository Manager
 ** SonarQube
 * Docker Java Project Template
+** Application
+** HTTP/TLS Endpoint
 
 .Requirements
 * 4 GB RAM for Docker
@@ -22,30 +33,110 @@ This project provides your own Docker-based development and deployment environme
 
 === Network Setup
 
-Add this entry to your local host name file.
+Add one or more of the following entries to your local host name file, depending on the services you want to use:
+
+[cols="a,a",options="header"]
+|====
+| Service
+| hosts
+
+| trac
+| trac.local
+
+| Redmine
+| redmine.local
+
+| YouTrack
+| youtrack.local
+
+| GitLab
+| gitlab.local
+
+| Sonatype Nexus
+| repo.local
+
+| SonarQube
+| quality.local
+|====
 
 .UNI*X /etc/hosts
+[source,text]
 ----
-127.0.0.1  localhost  trac.local  repo.local  quality.local
+127.0.0.1  localhost  trac.local  redmine.local  gitlab.local  repo.local  quality.local
 ----
 
 .macOS /etc/hosts
+On macOS please add local hostname too.
+[source,text]
 ----
-127.0.0.1  localhost  <local hostname>  trac.local  repo.local  quality.local
+127.0.0.1  localhost  <local hostname>  trac.local  redmine.local  gitlab.local  repo.local  quality.local
 ----
 
 .Windows C:\Windows\drivers\etc\hosts
+[source,text]
 ----
-127.0.0.1  localhost  repository  quality
+127.0.0.1  localhost  trac.local  redmine.local  gitlab.local  repository.local  quality.local
 ----
 
 === Setup Mikrokosmos
 
+[source,bash,linenum]
 ----
-./deploy.sh
+./deploy.sh build
+----
+
+.docker image ls
+[source,text]
+----
+REPOSITORY                        TAG             IMAGE ID   CREATED     SIZE
+mikrokosmos/nexus3                master-893cc28  e3f8dd42e  1 hour ago  635MB
+mikrokosmos/sonarqube             master-893cc28  68b8dc59e  1 hour ago  483MB
+mikrokosmos/sonarqube-db          master-893cc28  b6034d718  1 hour ago  146MB
+mikrokosmos/gitlab-ce             master-893cc28  d724b3c62  1 hour ago  1.88GB
+mikrokosmos/trac-myproject        master-893cc28  c8360192a  1 hour ago  312MB
+mikrokosmos/rproxy                master-893cc28  6ac7f8d9f  1 hour ago  23.1MB
+mikrokosmos/redmine               master-893cc28  4c77c7787  1 hour ago  505MB
+mikrokosmos/redmine-db            master-893cc28  8c8c2a02d  1 hour ago  146MB
+mikrokosmos/trac-db               master-893cc28  5fa7da7fd  1 hour ago  146MB
+mikrokosmos/trac                  master-893cc28  4dfb6687d  1 hour ago  312MB
+mikrokosmos/postgres              master-893cc28  e680524bd  1 hour ago  146MB
+mikrokosmos/alpine-latest-stable  master-893cc28  ceef70871  1 hour ago  11.7MB
+----
+
+.deploy.sh ps
+[source,text]
+----
+            Name                   Command          State   Ports
+----------------------------------------------------------------------------------
+mikrokosmos_nexus_1           sh -c ${SONATYP ...   Up      0.0.0.0:8081->8081/tcp
+mikrokosmos_redmine-db_1      /usr/local/bin/ ...   Up      5432/tcp
+mikrokosmos_redmine_1         /docker-entrypo ...   Up      3000/tcp
+mikrokosmos_rproxy_1          nginx                 Up      0.0.0.0:80->80/tcp
+mikrokosmos_sonarqube-db_1    docker-entrypoi ...   Up      5432/tcp
+mikrokosmos_sonarqube_1       ./bin/run.sh          Up      0.0.0.0:9000->9000/tcp
+mikrokosmos_trac-db_1         docker-entrypoi ...   Up      5432/tcp
+mikrokosmos_trac-myproject_1  /trac.sh              Up      8000/tcp
 ----
 
 === Using Mikrokosmos
+
+==== IntelliJ
+
+.Task Management
+[cols="a,a,a",options="header"]
+|====
+| System
+| URL
+| Notes
+
+| trac
+| http://trac.local/login/xmlrpc
+| Search: `search!=closed`
+
+| Redmine
+| http://redmine.local
+| Activate REST API under Aministration -> Configuration -> API
+|====
 
 ==== Maven
 

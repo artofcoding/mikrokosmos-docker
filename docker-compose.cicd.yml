@@ -1,54 +1,33 @@
 version: '3.7'
 
 services:
-  #james:
-  #  image: linagora/james
-  #mailhog:
+  #gitlab:
   #  build:
-  #    context: mailhog
-  #  image: mikrokosmos/cicd-mailhog:${VERSION}
+  #    context: CICD/gitlab-ce
+  #  image: mikrokosmos/gitlab-ce:${VERSION}
   #  restart: unless-stopped
-  #  ports:
-  #    - "1025:1025"
-  #    - "8025:8025"
-  #  #healthcheck:
-  #  #  test: echo | telnet 127.0.0.1 1025
-  #vault:
-  #  build:
-  #    context: CICD/vault
-  #  image: mikrokosmos/cicd-vault:${VERSION}
-  #  restart: unless-stopped
-  #  command: server -config=/opt/vault/config/vault-config.json
-  #  cap_add:
-  #    - IPC_LOCK
+  #  hostname: gitlab
   #  volumes:
-  #    - vault:/opt/vault:rw
+  #    - gitlab-etc:/etc/gitlab
+  #    - gitlab-log:/var/log/gitlab
+  #    - gitlab-opt:/var/opt/gitlab
   #  networks:
-  #    - cicd
+  #    - mikrokosmos-cicd
   #  expose:
-  #    - 8200
+  #    - 8080
   sonarqube-db:
     build:
       context: CICD/sonarqube-db
-    image: mikrokosmos/cicd-sonarqube-db:${VERSION}
+    image: mikrokosmos/sonarqube-db:${VERSION}
     restart: unless-stopped
     networks:
-      - cicd
+      - mikrokosmos-cicd
     expose:
       - 5432
-  #sonarqube-db-adminer:
-  #  image: adminer:4.7.5-standalone
-  #  depends_on:
-  #    - sonarqube-db
-  #  restart: unless-stopped
-  #  networks:
-  #    - cicd
-  #  ports:
-  #  - "9001:8080"
   sonarqube:
     build:
       context: CICD/sonarqube
-    image: mikrokosmos/cicd-sonarqube:${VERSION}
+    image: mikrokosmos/sonarqube:${VERSION}
     depends_on:
       - sonarqube-db
     restart: unless-stopped
@@ -64,13 +43,13 @@ services:
       - sonarqube_logs:/opt/sonarqube/logs
       - sonarqube_data:/opt/sonarqube/data
     networks:
-      - cicd
+      - mikrokosmos-cicd
     ports:
       - "9000:9000"
   nexus:
     build:
       context: CICD/nexus
-    image: mikrokosmos/cicd-nexus3:${VERSION}
+    image: mikrokosmos/nexus3:${VERSION}
     restart: unless-stopped
     environment:
       - NEXUS_CONTEXT=nexus
@@ -80,13 +59,19 @@ services:
       - nexus_data:/nexus-data
       - nexus_backup:/nexus-backup
     networks:
-      - cicd
+      - mikrokosmos-cicd
     ports:
       - "8081:8081"
       - "8998:8998"
       - "8997:8997"
 
 volumes:
+  #gitlab-etc:
+  #  driver: local
+  #gitlab-log:
+  #  driver: local
+  #gitlab-opt:
+  #  driver: local
   sonarqube_conf:
     driver: local
   sonarqube_extensions:
@@ -99,11 +84,9 @@ volumes:
     driver: local
   nexus_backup:
     driver: local
-  #vault:
-  #  driver: local
 
 networks:
-  cicd:
+  mikrokosmos-cicd:
     driver: bridge
     internal: false
     external: false

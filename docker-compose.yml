@@ -11,13 +11,17 @@ services:
       - nexus
       - sonarqube
     networks:
-      - pm
-      - cicd
+      - mikrokosmos-pm
+      - mikrokosmos-cicd
     ports:
     - "80:80"
 
 networks:
-  cicd:
+  mikrokosmos-cicd:
+    driver: bridge
+    internal: false
+    external: false
+  mikrokosmos-pm:
     driver: bridge
     internal: false
     external: false

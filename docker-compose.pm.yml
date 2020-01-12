@@ -7,7 +7,7 @@ services:
     image: mikrokosmos/trac-db:${VERSION}
     restart: unless-stopped
     networks:
-      - pm
+      - mikrokosmos-pm
     expose:
       - 5432
   trac-myproject:
@@ -20,29 +20,29 @@ services:
     volumes:
       - trac_data:/var/trac
     networks:
-      - pm
+      - mikrokosmos-pm
     expose:
       - 8000
-  #redmine-db:
-  #  build:
-  #    context: PM/redmine-db
-  #  image: mikrokosmos/redmine-db:${VERSION}
-  #  restart: unless-stopped
-  #  networks:
-  #    - pm
-  #  expose:
-  #    - 5432
-  #redmine:
-  #  build:
-  #    context: PM/redmine
-  #  image: mikrokosmos/redmine:${VERSION}
-  #  restart: unless-stopped
-  #  depends_on:
-  #    - redmine-db
-  #  networks:
-  #    - pm
-  #  expose:
-  #    - 3000
+  redmine-db:
+    build:
+      context: PM/redmine-db
+    image: mikrokosmos/redmine-db:${VERSION}
+    restart: unless-stopped
+    networks:
+      - mikrokosmos-pm
+    expose:
+      - 5432
+  redmine:
+    build:
+      context: PM/redmine
+    image: mikrokosmos/redmine:${VERSION}
+    restart: unless-stopped
+    depends_on:
+      - redmine-db
+    networks:
+      - mikrokosmos-pm
+    expose:
+      - 3000
   #openproject:
   #  build:
   #    context: PM/openproject
@@ -52,7 +52,22 @@ services:
   #    - openproject_pgdata:/var/openproject/pgdata
   #    - openproject_static:/var/openproject/assets
   #  networks:
-  #    - pm
+  #    - mikrokosmos-pm
+  #  expose:
+  #    - 8080
+  # Free for up to 10 users
+  #youtrack:
+  #  build:
+  #    context: PM/youtrack
+  #  image: mikrokosmos/youtrack:${VERSION}
+  #  restart: unless-stopped
+  #  volumes:
+  #    - youtrack_data:/opt/youtrack/data
+  #    - youtrack_conf:/opt/youtrack/conf
+  #    - youtrack_logs:/opt/youtrack/logs
+  #    - youtrack_backups:/opt/youtrack/backups
+  #  networks:
+  #    - mikrokosmos-pm
   #  expose:
   #    - 8080
 
@@ -63,9 +78,17 @@ volumes:
   #  driver: local
   #openproject_static:
   #  driver: local
+  #youtrack_data:
+  #  driver: local
+  #youtrack_conf:
+  #  driver: local
+  #youtrack_logs:
+  #  driver: local
+  #youtrack_backups:
+  #  driver: local
 
 networks:
-  pm:
+  mikrokosmos-pm:
     driver: bridge
     internal: false
     external: false

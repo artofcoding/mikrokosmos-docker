@@ -8,6 +8,8 @@
 PREFIX=mikrokosmos
 PROJECT=MyProject
 
+TRAC_VERSION=1.2.5
+
 #
 # DO NOT MODIFY LINES BELOW
 #
@@ -21,104 +23,150 @@ HEAD_COMMIT_HASH="$(git rev-parse --short HEAD)"
 VERSION="${CURRENT_BRANCH}-${HEAD_COMMIT_HASH}"
 export VERSION
 
-echo "*"
-echo "* Version ${VERSION}"
-echo "*"
+function build_library() {
+    local lib=$1
+    echo ""
+    echo "*"
+    echo "* Building ${lib}:${VERSION}"
+    echo "*"
+    echo ""
+    docker build \
+        --build-arg "VERSION=${VERSION}" \
+        -t "${PREFIX}/${lib}:${VERSION}" \
+        "library/${lib}"
+    echo "* done"
+}
+
+function docker_compose_build() {
+    local prj=$1
+    docker-compose \
+        -p "${PREFIX}" \
+        -f "docker-compose.${prj}.yml" \
+        build \
+        --build-arg "PROJECT=${PROJECT}" \
+        --build-arg "VERSION=${VERSION}"
+}
 
 echo "*"
-echo "* Building alpine-latest-stable"
+echo "* Mikrokosmos Version ${VERSION}"
 echo "*"
-docker build \
-    -t ${PREFIX}/alpine-latest-stable:${VERSION} \
-    alpine-latest-stable
 
-echo "*"
-echo "* Building openssh-base"
-echo "*"
-docker build \
-    --build-arg VERSION=${VERSION} \
-    -t ${PREFIX}/openssh-base:${VERSION} \
-    openssh-base
-
-echo "*"
-echo "* Building asciidocserver"
-echo "*"
-docker build \
-    --build-arg VERSION=${VERSION} \
-    -t ${PREFIX}/asciidocserver:${VERSION} \
-    asciidocserver
-
-echo "*"
-echo "* Building CICD"
-echo "*"
-docker-compose \
-    -p ${PREFIX} \
-    -f docker-compose.cicd.yml \
-    build \
-    --build-arg PROJECT=${PROJECT} \
-    --build-arg VERSION=${VERSION}
-
-echo "*"
-echo "* Building PM -- trac"
-echo "*"
-docker build \
-    --build-arg VERSION=${VERSION} \
-    --build-arg PROJECT=${PROJECT} \
-    -t ${PREFIX}/trac:${VERSION} \
-    PM/trac
-echo "*"
-echo "* Building PM"
-echo "*"
-docker-compose \
-    -p ${PREFIX} \
-    -f docker-compose.pm.yml \
-    build \
-    --build-arg PROJECT=${PROJECT} \
-    --build-arg VERSION=${VERSION}
-
-echo "*"
-echo "* Building Reverse Proxy"
-echo "*"
-docker build \
-    --build-arg VERSION=${VERSION} \
-    -t ${PREFIX}/rproxy:${VERSION} \
-    rproxy
-
-echo "*"
-echo "* Building Endpoint"
-echo "*"
-endpoint/endpoint.sh build-images
-
-echo "*"
-echo "* Running CICD, PM w/ Reverse Proxy"
-echo "*"
-docker-compose \
-    -p ${PREFIX} \
-    -f docker-compose.yml \
-    -f docker-compose.pm.yml \
-    -f docker-compose.cicd.yml \
-    up -d
-
-#echo "*"
-#echo "* Running Reverse Proxy as standalone container"
-#echo "*"
-#docker run \
-#    --name mikrokosmos_rproxy \
-#    --network mikrokosmos_cicd \
-#    -d \
-#    -p 80:80 \
-#    mikrokosmos/rproxy:${VERSION}
-
-echo "**************************************************"
-echo "*"
-echo "* Please adjust your host resolution (/etc/hosts)."
-echo "* See README.adoc."
-echo "*"
-echo "* Point your browser to"
-echo "*     http://trac.local"
-echo "*     http://repo.local"
-echo "*     http://quality.local"
-echo "*"
-echo "**************************************************"
+cmd=${1:-usage}
+case "${cmd}" in
+    library)
+        CONTAINERS=(alpine-latest-stable openssh-base postgres redis redis-backip asciidocserver)
+        build_library "${CONTAINERS[@]}"
+    ;;
+    template)
+        echo "*"
+        echo "* Template: building Endpoint"
+        echo "*"
+        template/endpoint/endpoint.sh build-images
+        echo "* done"
+    ;;
+    build)
+        for cnt in alpine-latest-stable postgres
+        do
+            if [[ $(docker image ls | grep -c "${cnt}") = 0 ]]
+            then
+                build_library "${cnt}"
+            fi
+        done
+        echo ""
+        echo "*"
+        echo "* Building CICD"
+        echo "*"
+        echo ""
+        docker_compose_build cicd
+        echo "* done"
+        echo ""
+        echo "*"
+        echo "* Building PM -- trac"
+        echo "*"
+        echo ""
+        docker build \
+            --build-arg "VERSION=${VERSION}" \
+            --build-arg "PROJECT=${PROJECT}" \
+            --build-arg "TRAC_VERSION=${TRAC_VERSION}" \
+            -t "${PREFIX}/trac:${VERSION}" \
+            PM/trac
+        echo "* done"
+        echo ""
+        echo "*"
+        echo "* Building PM"
+        echo "*"
+        echo ""
+        docker_compose_build pm
+        echo "* done"
+        echo ""
+        echo "*"
+        echo "* Building Reverse Proxy"
+        echo "*"
+        echo ""
+        docker build \
+            --build-arg "VERSION=${VERSION}" \
+            -t "${PREFIX}/rproxy:${VERSION}" \
+            rproxy
+        echo "* done"
+    ;;
+    run)
+        echo ""
+        echo "*"
+        echo "* Running Project Management, CI/CD and Reverse Proxy"
+        echo "*"
+        echo ""
+        docker-compose \
+            -p ${PREFIX} \
+            -f docker-compose.yml \
+            -f docker-compose.pm.yml \
+            -f docker-compose.cicd.yml \
+            up -d
+        echo "* done"
+        #YOUTRACK_PWD=$(docker exec \
+        #    mikrokosmos_youtrack_1 \
+        #    cat /opt/youtrack/conf/internal/services/configurationWizard/wizard_token.txt)
+        # trac password takes some time
+        TRAC_PWD=$(docker logs mikrokosmos_trac-myproject_1 2>&1 \
+            | grep "Password is" \
+            | awk -F':' '{print $2}' \
+            | tr -d ' ')
+        echo ""
+        echo "**************************************************"
+        echo "*"
+        echo "* Please adjust your host resolution (/etc/hosts)."
+        echo "* See README.adoc."
+        echo "*"
+        echo "* Point your browser to"
+        echo "*"
+        #echo "*     http://youtrack.local (${YOUTRACK_PWD})"
+        echo "*     http://trac.local (${TRAC_PWD})"
+        echo "*     http://redmine.local"
+        echo "*     http://repo.local"
+        echo "*     http://quality.local"
+        echo "*"
+        echo "**************************************************"
+        echo ""
+    ;;
+    ps)
+        docker-compose \
+            -p ${PREFIX} \
+            -f docker-compose.yml \
+            -f docker-compose.pm.yml \
+            -f docker-compose.cicd.yml \
+            ps
+    ;;
+    stop)
+        docker-compose \
+            -p ${PREFIX} \
+            -f docker-compose.yml \
+            -f docker-compose.pm.yml \
+            -f docker-compose.cicd.yml \
+            stop
+    ;;
+    usage)
+        echo "usage: $0 <library | template | build | run | stop>"
+        exit 1
+    ;;
+esac
 
 exit 0
