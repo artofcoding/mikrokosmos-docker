@@ -18,7 +18,7 @@ fi
 # Time
 #
 
-cp /usr/share/zoneinfo/Europe/Berlin /etc/localtime
+[ ! -f /etc/localtime ] && cp /usr/share/zoneinfo/Europe/Berlin /etc/localtime
 echo "Europe/Berlin" >/etc/timezone
 #echo "LANG=de_DE.UTF-8" >/etc/locale.conf
 echo "LANG=en_US.UTF-8" >/etc/locale.conf
