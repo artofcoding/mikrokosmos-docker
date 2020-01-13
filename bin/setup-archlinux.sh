@@ -86,11 +86,17 @@ usermod -s /bin/zsh root
 MIKROKOSMOS_VERSION=v1.0
 
 # Shallow clone Mikrokosmos Docker
-git clone --depth 1 \
-    --branch ${MIKROKOSMOS_VERSION} \
-    https://github.com/artofcoding/mikrokosmos-docker.git
+git config set advice.detachedHead false
+if [ ! -d mikrokosmos-docker ]
+then
+    git clone --depth 1 \
+        --branch ${MIKROKOSMOS_VERSION} \
+        https://github.com/artofcoding/mikrokosmos-docker.git
+fi
 # Deploy
 pushd mikrokosmos-docker >/dev/null
+git reset --hard
+git pull
 ./deploy.sh build
 popd >/dev/null
 
