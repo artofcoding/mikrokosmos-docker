@@ -79,4 +79,15 @@ systemctl start docker
 pacman --noconfirm -S zsh
 usermod -s /bin/zsh root
 
+#
+# Mikrokosmos Docker
+#
+
+# Shallow clone Mikrokosmos Docker
+git clone --depth 1 --branch master https://github.com/artofcoding/mikrokosmos-docker.git
+# Deploy
+pushd mikrokosmos-docker >/dev/null
+./deploy.sh build
+popd >/dev/null
+
 exit 0
