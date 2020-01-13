@@ -18,9 +18,16 @@ set -o nounset
 set -o errexit
 
 export PREFIX
+
 CURRENT_BRANCH="$(git branch --show-current)"
 HEAD_COMMIT_HASH="$(git rev-parse --short HEAD)"
-VERSION="${CURRENT_BRANCH}-${HEAD_COMMIT_HASH}"
+CURRENT_TAG="$(git --no-pager tag -l --points-at HEAD)"
+if [ -n "${CURRENT_TAG}" ]
+then
+    VERSION="${CURRENT_TAG:1}"
+else
+    VERSION="${CURRENT_BRANCH}-${HEAD_COMMIT_HASH}"
+fi
 export VERSION
 
 function build_library() {
