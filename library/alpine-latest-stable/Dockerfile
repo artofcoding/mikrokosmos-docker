@@ -6,6 +6,8 @@ LABEL project="Mikrokosmos"
 
 ENV TZ Europe/Berlin
 ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US:en
+ENV LC_ALL en_US.UTF-8
 
 COPY alpine-upgrade.sh /
 COPY repositories /etc/apk/repositories

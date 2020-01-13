@@ -54,8 +54,14 @@ echo "*"
 cmd=${1:-usage}
 case "${cmd}" in
     library)
-        CONTAINERS=(alpine-latest-stable openssh-base postgres redis redis-backip asciidocserver)
-        build_library "${CONTAINERS[@]}"
+        CONTAINERS=(alpine-latest-stable openssh-base maven postgres redis redis-backup asciidocserver)
+        for cnt in "${CONTAINERS[@]}"
+        do
+            if [[ $(docker image ls | grep "${cnt}" | grep -c "${VERSION}") = 0 ]]
+            then
+                build_library "${cnt}"
+            fi
+        done
     ;;
     template)
         echo "*"
