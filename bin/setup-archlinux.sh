@@ -85,6 +85,12 @@ usermod -s /bin/zsh root
 
 MIKROKOSMOS_VERSION=v1.0
 
+# Docker and SonarQube / Elasticsearch
+cat >>/etc/sysctl.d/99-sysctl.conf <<EOF
+vm.max_map_count=262144
+EOF
+sysctl --system
+
 # Shallow clone Mikrokosmos Docker
 #git config set advice.detachedHead false
 if [ ! -d mikrokosmos-docker ]
