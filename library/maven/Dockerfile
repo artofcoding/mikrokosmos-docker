@@ -1,4 +1,4 @@
-FROM maven:3.6.3-jdk11-slim
+FROM maven:3.6.3-jdk-11-slim
 
 LABEL maintainer="Ralf Bensmann <ralf@art-of-coding.eu>"
 LABEL vendor="Art of Coding UG"
