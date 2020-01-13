@@ -83,8 +83,12 @@ usermod -s /bin/zsh root
 # Mikrokosmos Docker
 #
 
+MIKROKOSMOS_VERSION=v1.0
+
 # Shallow clone Mikrokosmos Docker
-git clone --depth 1 --branch master https://github.com/artofcoding/mikrokosmos-docker.git
+git clone --depth 1 \
+    --branch ${MIKROKOSMOS_VERSION} \
+    https://github.com/artofcoding/mikrokosmos-docker.git
 # Deploy
 pushd mikrokosmos-docker >/dev/null
 ./deploy.sh build
