@@ -44,8 +44,8 @@ services:
       - sonarqube_data:/opt/sonarqube/data
     networks:
       - mikrokosmos-cicd
-    ports:
-      - "9000:9000"
+    expose:
+      - 9000
   nexus:
     build:
       context: CICD/nexus
@@ -60,8 +60,9 @@ services:
       - nexus_backup:/nexus-backup
     networks:
       - mikrokosmos-cicd
+    expose:
+      - 8081
     ports:
-      - "8081:8081"
       - "8998:8998"
       - "8997:8997"
 
