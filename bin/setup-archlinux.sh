@@ -38,15 +38,17 @@ pacman --noconfirm -S git
 # SSH
 #
 
-pkfile=$HOME/.ssh/id_rsa
-if [[ ! -f ${pkfile} ]]
+pkfile="${HOME}/.ssh/id_rsa"
+if [[ ! -f "${pkfile}" ]]
 then
-    ssh-keygen -t rsa -b 4096 -N "" -f ${pkfile}
+    ssh-keygen -t rsa -b 4096 -N "" -f "${pkfile}"
 fi
+set +o errexit
 ssh-keygen -R github.com
-ssh-keyscan github.com >>$HOME/.ssh/known_hosts
 ssh-keygen -R bitbucket.org
-ssh-keyscan bitbucket.org >>$HOME/.ssh/known_hosts
+set -o errexit
+ssh-keyscan github.com >>${HOME}/.ssh/known_hosts
+ssh-keyscan bitbucket.org >>${HOME}/.ssh/known_hosts
 
 #
 # Docker
