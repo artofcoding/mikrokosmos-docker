@@ -99,11 +99,15 @@ then
         --depth 1 \
         --branch ${MIKROKOSMOS_VERSION} \
         https://github.com/artofcoding/mikrokosmos-docker.git
+else
+    pushd mikrokosmos-docker >/dev/null
+    ./deploy.sh stop
+    git reset --hard
+    git pull
+    popd >/dev/null
 fi
 # Deploy
 pushd mikrokosmos-docker >/dev/null
-git reset --hard
-git pull
 ./deploy.sh build
 popd >/dev/null
 
