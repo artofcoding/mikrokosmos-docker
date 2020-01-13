@@ -57,6 +57,7 @@ ssh-keyscan bitbucket.org >>${HOME}/.ssh/known_hosts
 # Install Docker
 pacman --noconfirm -S docker docker-compose
 # Docker Logfiles
+pacman --noconfirm -S logrotate
 logrotate_docker=/etc/logrotate.d/docker
 cat >${logrotate_docker} <<EOF
 /var/lib/docker/containers/*/*.log {
