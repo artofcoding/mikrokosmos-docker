@@ -71,7 +71,7 @@ case "${cmd}" in
         echo "* done"
     ;;
     build)
-        for cnt in alpine-latest-stable postgres
+        for cnt in alpine-latest-stable maven postgres
         do
             if [[ $(docker image ls | grep -c "${cnt}") = 0 ]]
             then
