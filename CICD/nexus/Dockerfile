@@ -19,8 +19,7 @@ RUN rm -rf ${NEXUS_DATA}/db/component \
     && mkdir -p ${NEXUS_DATA}/restore-from-backup/
 
 USER root
-RUN chmod -R 660 ${NEXUS_DATA}/restore-from-backup/ \
-    && mkdir ${NEXUS_BACKUP} \
+RUN mkdir ${NEXUS_BACKUP} \
     && chown nexus:nexus ${NEXUS_BACKUP} \
     && chmod 700 ${NEXUS_BACKUP}
 
@@ -31,5 +30,7 @@ CMD ["sh", "-c", "${SONATYPE_DIR}/start-nexus-repository-manager.sh"]
 
 FROM base
 COPY --chown=nexus:nexus nexus.properties ${NEXUS}/etc
+RUN mkdir ${NEXUS_DATA}/restore-from-backup/ \
+    && chmod -R 660 ${NEXUS_DATA}/restore-from-backup/
 COPY --chown=nexus:nexus restore-from-backup/* ${NEXUS_DATA}/restore-from-backup/
 EXPOSE 8081
