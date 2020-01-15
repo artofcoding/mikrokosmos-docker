@@ -6,7 +6,7 @@
 #
 
 PREFIX=mikrokosmos
-PROJECT=MyProject
+TRAC_PROJECT=MyProject
 
 TRAC_VERSION=1.2.5
 
@@ -50,7 +50,7 @@ function docker_compose_build() {
         -p "${PREFIX}" \
         -f "docker-compose.${prj}.yml" \
         build \
-        --build-arg "PROJECT=${PROJECT}" \
+        --build-arg "TRAC_PROJECT=${TRAC_PROJECT}" \
         --build-arg "VERSION=${VERSION}"
 }
 
@@ -99,7 +99,7 @@ case "${cmd}" in
         echo ""
         docker build \
             --build-arg "VERSION=${VERSION}" \
-            --build-arg "PROJECT=${PROJECT}" \
+            --build-arg "TRAC_PROJECT=${TRAC_PROJECT}" \
             --build-arg "TRAC_VERSION=${TRAC_VERSION}" \
             -t "${PREFIX}/trac:${VERSION}" \
             PM/trac
@@ -139,6 +139,7 @@ case "${cmd}" in
         #    mikrokosmos_youtrack_1 \
         #    cat /opt/youtrack/conf/internal/services/configurationWizard/wizard_token.txt)
         # trac password takes some time
+        sleep 3
         TRAC_PWD=$(docker logs mikrokosmos_trac-myproject_1 2>&1 \
             | grep "Password is" \
             | awk -F':' '{print $2}' \
