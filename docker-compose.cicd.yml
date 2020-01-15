@@ -54,7 +54,7 @@ services:
     environment:
       - NEXUS_CONTEXT=nexus
       - NEXUS_DATA=/nexus-data
-      - INSTALL4J_ADD_VM_PARAMS=-Xms1g -Xmx1g -XX:MaxDirectMemorySize=3g -Djava.util.prefs.userRoot=/nexus_data/javaprefs
+      - INSTALL4J_ADD_VM_PARAMS=-Xms1g -Xmx1g -XX:MaxDirectMemorySize=3g -Djava.util.prefs.userRoot=/nexus-data/javaprefs
     volumes:
       - nexus_data:/nexus-data
       - nexus_backup:/nexus-backup
