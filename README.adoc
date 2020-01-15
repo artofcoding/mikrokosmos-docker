@@ -111,36 +111,38 @@ Add one or more of the following entries to your local host name file, depending
 | Redmine
 | redmine.local
 
-| YouTrack
+| (YouTrack)
 | youtrack.local
 
-| GitLab
+| (GitLab)
 | gitlab.local
 
 | Sonatype Nexus
 | repo.local
 
 | SonarQube
-| quality.local
+| sonarqube.local
 |====
+
+Some examples:
 
 .UNI*X /etc/hosts
 [source,text]
 ----
-127.0.0.1  localhost  trac.local  redmine.local  gitlab.local  repo.local  quality.local
+127.0.0.1  localhost  trac.local  repo.local  sonarqube.local
 ----
 
 .macOS /etc/hosts
 On macOS please add local hostname too.
 [source,text]
 ----
-127.0.0.1  localhost  <local hostname>  trac.local  redmine.local  gitlab.local  repo.local  quality.local
+127.0.0.1  localhost  <local hostname>  trac.local  redmine.local  repo.local  sonarqube.local
 ----
 
-.Windows C:\Windows\drivers\etc\hosts
+.Windows C:\Windows\system32\drivers\etc\hosts
 [source,text]
 ----
-127.0.0.1  localhost  trac.local  redmine.local  gitlab.local  repository.local  quality.local
+127.0.0.1  localhost  trac.local  repo.local  sonarqube.local
 ----
 
 === Using Mikrokosmos
