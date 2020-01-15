@@ -145,7 +145,7 @@ case "${cmd}" in
             | grep "Password is" \
             | awk -F':' '{print $2}' \
             | tr -d ' ')
-        NEXUS_PWD=$(docker exec -it mikrokosmos_nexus_1 \
+        NEXUS_PWD=$(docker exec mikrokosmos_nexus_1 \
             cat /nexus-data/admin.password)
         echo ""
         echo "**************************************************"
