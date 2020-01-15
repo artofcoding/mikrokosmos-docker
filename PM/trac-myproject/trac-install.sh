@@ -5,12 +5,12 @@
 # All rights reserved. Use is subject to license terms.
 #
 
-PROJECT=MyProject
+TRAC_PROJECT=MyProject
 
 TRAC_ADMINUSER="admin"
 TRAC_DATA="/var/trac"
-PROJECT_DIR="${TRAC_DATA}/${PROJECT}"
-export PROJECT_DIR
+TRAC_PROJECT_DIR="${TRAC_DATA}/${TRAC_PROJECT}"
+export TRAC_PROJECT_DIR
 DBLINK="postgres://trac:trac@trac-db:5432/trac?schema=trac"
 export DBLINK
 
@@ -36,13 +36,13 @@ function trac_install_plugin_from_source() {
 }
 
 function trac_upgrade_all() {
-    trac-admin "${PROJECT_DIR}" upgrade --no-backup
-    trac-admin "${PROJECT_DIR}" wiki upgrade
+    trac-admin "${TRAC_PROJECT_DIR}" upgrade --no-backup
+    trac-admin "${TRAC_PROJECT_DIR}" wiki upgrade
 }
 
-if [ ! -d "${PROJECT_DIR}" ]
+if [ ! -d "${TRAC_PROJECT_DIR}" ]
 then
-    trac-admin "${PROJECT_DIR}" initenv "${PROJECT}" "${DBLINK}"
+    trac-admin "${TRAC_PROJECT_DIR}" initenv "${TRAC_PROJECT}" "${DBLINK}"
 fi
 
 if [ ! -f "${TRAC_DATA}/trac-digest.py" ]
@@ -52,20 +52,20 @@ then
         http://www.agilofortrac.com/en/download/trac-digest.py
 fi
 
-if [ ! -f "${PROJECT_DIR}/users.digest" ]
+if [ ! -f "${TRAC_PROJECT_DIR}/users.digest" ]
 then
     #PW=$(secpwgen -Aad 12)
     PW=$(pwgen 12 1)
     python ${TRAC_DATA}/trac-digest.py \
         -u "${TRAC_ADMINUSER}" \
         -p "${PW}" \
-        >>"${PROJECT_DIR}/users.digest"
+        >>"${TRAC_PROJECT_DIR}/users.digest"
     echo ""
     echo "* ---------------------------------"
     echo "* Password is:  ${PW}"
     echo "* ---------------------------------"
     echo ""
-    trac-admin "${PROJECT_DIR}" permission add "${TRAC_ADMINUSER}" TRAC_ADMIN
+    trac-admin "${TRAC_PROJECT_DIR}" permission add "${TRAC_ADMINUSER}" TRAC_ADMIN
 fi
 
 echo ""
@@ -74,7 +74,7 @@ echo "* TracIniAdminPlugin"
 echo "*"
 echo ""
 easy_install-2.7 https://trac-hacks.org/svn/iniadminplugin/0.11
-trac-admin "${PROJECT_DIR}" config set components iniadmin.* enabled
+trac-admin "${TRAC_PROJECT_DIR}" config set components iniadmin.* enabled
 echo "* done"
 
 echo ""
@@ -83,8 +83,8 @@ echo "* TracXmlRpcPlugin"
 echo "*"
 echo ""
 pip install TracXMLRPC
-trac-admin "${PROJECT_DIR}" config set components tracrpc.* enabled
-trac-admin "${PROJECT_DIR}" permission add "${TRAC_ADMINUSER}" XML_RPC
+trac-admin "${TRAC_PROJECT_DIR}" config set components tracrpc.* enabled
+trac-admin "${TRAC_PROJECT_DIR}" permission add "${TRAC_ADMINUSER}" XML_RPC
 echo "* done"
 
 echo ""
@@ -93,7 +93,7 @@ echo "* TracSubTicketsPlugin"
 echo "*"
 echo ""
 pip install TracSubTickets
-trac-admin "${PROJECT_DIR}" config set components tracsubtickets.* enabled
+trac-admin "${TRAC_PROJECT_DIR}" config set components tracsubtickets.* enabled
 echo "* done"
 
 echo ""
@@ -105,8 +105,8 @@ trac_install_plugin_from_source \
     TracScheduleAndRelationPlugin \
     https://github.com/CaulyKan/TracTicketRelationPlugin/archive/master.zip
 trac_upgrade_all
-trac-admin "${PROJECT_DIR}" config set components ticketrelation.* enabled
-cat >>${PROJECT_DIR}/conf/trac.ini <<EOF
+trac-admin "${TRAC_PROJECT_DIR}" config set components ticketrelation.* enabled
+cat >>${TRAC_PROJECT_DIR}/conf/trac.ini <<EOF
 
 [ticket-custom]
 activity_finish_date = time
@@ -145,7 +145,7 @@ trac_install_plugin_from_source \
     'https://trac-hacks.org/browser/tractickettemplateplugin?rev=17653&format=zip' \
     tractickettemplateplugin/1.0
 trac_upgrade_all
-trac-admin "${PROJECT_DIR}" config set components tickettemplate.* enabled
+trac-admin "${TRAC_PROJECT_DIR}" config set components tickettemplate.* enabled
 echo "* done"
 
 echo ""
@@ -155,7 +155,7 @@ echo "*"
 echo ""
 pip install 'https://trac-hacks.org/browser/tracworkflowadminplugin/0.12/?rev=latest&format=zip'
 trac_upgrade_all
-trac-admin "${PROJECT_DIR}" config set components tracworkflowadmin.web_ui.* enabled
+trac-admin "${TRAC_PROJECT_DIR}" config set components tracworkflowadmin.web_ui.* enabled
 echo "* done"
 
 echo ""
@@ -165,7 +165,7 @@ echo "*"
 echo ""
 #easy_install-2.7 https://trac-hacks.org/svn/cardsplugin/trunk
 pip install https://trac-hacks.org/svn/cardsplugin/trunk
-trac-admin "${PROJECT_DIR}" config set components cards.* enabled
+trac-admin "${TRAC_PROJECT_DIR}" config set components cards.* enabled
 echo "* done"
 
 echo ""
@@ -175,7 +175,7 @@ echo "*"
 echo ""
 pip install TracWatchlistPlugin
 trac_upgrade_all
-trac-admin "${PROJECT_DIR}" config set components tracwatchlist.* enabled
+trac-admin "${TRAC_PROJECT_DIR}" config set components tracwatchlist.* enabled
 trac_upgrade_all
 echo "* done"
 
@@ -185,9 +185,9 @@ echo "* TracUserPicturesPlugin"
 echo "*"
 echo ""
 pip install trac-UserPicturesPlugin
-trac-admin "${PROJECT_DIR}" config set components userpictures.* enabled
-trac-admin "${PROJECT_DIR}" config set tickettemplate field_list "summary, description, reporter, owner, priority, cc, milestone, component, version, type"
-trac-admin "${PROJECT_DIR}" config set tickettemplate enable_custom true
+trac-admin "${TRAC_PROJECT_DIR}" config set components userpictures.* enabled
+trac-admin "${TRAC_PROJECT_DIR}" config set tickettemplate field_list "summary, description, reporter, owner, priority, cc, milestone, component, version, type"
+trac-admin "${TRAC_PROJECT_DIR}" config set tickettemplate enable_custom true
 echo "* done"
 
 echo ""
@@ -198,10 +198,10 @@ echo ""
 trac_install_plugin_from_source \
     BlueFlatTheme \
     'https://trac-hacks.org/browser/blueflattheme?rev=17657&format=zip'
-trac-admin "${PROJECT_DIR}" config set components themeengine.* enabled
-trac-admin "${PROJECT_DIR}" config set components blueflattheme.* enabled
-trac-admin "${PROJECT_DIR}" config set theme theme blueflat
-#trac-admin "${PROJECT_DIR}" config set blue-flat-theme replace_jquery 0
+trac-admin "${TRAC_PROJECT_DIR}" config set components themeengine.* enabled
+trac-admin "${TRAC_PROJECT_DIR}" config set components blueflattheme.* enabled
+trac-admin "${TRAC_PROJECT_DIR}" config set theme theme blueflat
+#trac-admin "${TRAC_PROJECT_DIR}" config set blue-flat-theme replace_jquery 0
 echo "* done"
 
 exit 0
