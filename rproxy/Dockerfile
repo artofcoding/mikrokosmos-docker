@@ -11,6 +11,9 @@ RUN apk update \
     && apk --no-cache add \
         tzdata \
         nginx \
+        openssl \
+        certbot-nginx \
+        curl \
     && cp /usr/share/zoneinfo/${TZ} /etc/localtime \
     && echo "${TZ}" >/etc/timezone \
     && rm /etc/nginx/conf.d/default.conf* \

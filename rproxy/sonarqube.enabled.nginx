@@ -1,11 +1,13 @@
-upstream quality_upstream {
+upstream sonarqube_upstream {
     server sonarqube:9000;
 }
 
 server {
 
+    include conf.d/variables.nginx;
+
     listen 80;
-    server_name quality.local;
+    server_name sonarqube.*;
 
     access_log /proc/self/fd/1 main;
     error_log /proc/self/fd/2 info;
@@ -47,7 +49,7 @@ server {
         # Mitigate httpoxy attack
         proxy_set_header Proxy "";
         proxy_pass_request_headers on;
-        proxy_pass http://quality_upstream/;
+        proxy_pass http://sonarqube_upstream/;
         proxy_redirect default;
         #proxy_set_header Accept-Encoding "";
     }

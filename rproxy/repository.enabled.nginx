@@ -4,8 +4,10 @@ upstream repository_upstream {
 
 server {
 
+    include conf.d/variables.nginx;
+
     listen 80;
-    server_name repo.local;
+    server_name repo.*;
 
     access_log /proc/self/fd/1 main;
     error_log /proc/self/fd/2 info;
@@ -55,4 +57,12 @@ server {
         #proxy_set_header Accept-Encoding "";
     }
 
+}
+
+upstream docker_upstream {
+    server nexus:8997;
+}
+
+upstream docker_private_upstream {
+    server nexus:8998;
 }
