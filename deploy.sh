@@ -60,7 +60,7 @@ echo "*"
 
 cmd=${1:-usage}
 case "${cmd}" in
-    library)
+    build-library)
         CONTAINERS=(alpine-latest-stable openssh-base maven postgres redis redis-backup asciidocserver)
         for cnt in "${CONTAINERS[@]}"
         do
@@ -70,7 +70,7 @@ case "${cmd}" in
             fi
         done
     ;;
-    template)
+    build-template)
         echo "*"
         echo "* Template: building Endpoint"
         echo "*"
@@ -85,13 +85,6 @@ case "${cmd}" in
                 build_library "${cnt}"
             fi
         done
-        echo ""
-        echo "*"
-        echo "* Building CICD"
-        echo "*"
-        echo ""
-        docker_compose_build cicd
-        echo "* done"
         echo ""
         echo "*"
         echo "* Building PM -- trac"
@@ -110,6 +103,13 @@ case "${cmd}" in
         echo "*"
         echo ""
         docker_compose_build pm
+        echo "* done"
+        echo ""
+        echo "*"
+        echo "* Building CICD"
+        echo "*"
+        echo ""
+        docker_compose_build cicd
         echo "* done"
         echo ""
         echo "*"
@@ -169,6 +169,14 @@ case "${cmd}" in
             -f docker-compose.cicd.yml \
             ps
     ;;
+    start)
+        docker-compose \
+            -p ${PREFIX} \
+            -f docker-compose.yml \
+            -f docker-compose.pm.yml \
+            -f docker-compose.cicd.yml \
+            start
+    ;;
     stop)
         docker-compose \
             -p ${PREFIX} \
@@ -178,7 +186,7 @@ case "${cmd}" in
             stop
     ;;
     usage)
-        echo "usage: $0 <library | template | build | run | stop>"
+        echo "usage: $0 <build-library | build-template | build | run | stop>"
         exit 1
     ;;
 esac
