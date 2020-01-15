@@ -45,36 +45,33 @@ git clone \
     --depth 1 \
     --branch v1.0 \
     https://github.com/artofcoding/mikrokosmos-docker.git
-----
-
-[source,bash]
-----
 cd mikrokosmos-docker
 ./deploy.sh build
 ----
 
-.docker image ls
+.Docker Images
 [source,text]
 ----
-REPOSITORY                        TAG             IMAGE ID   CREATED     SIZE
-mikrokosmos/nexus3                master-893cc28  e3f8dd42e  1 hour ago  635MB
-mikrokosmos/sonarqube             master-893cc28  68b8dc59e  1 hour ago  483MB
-mikrokosmos/sonarqube-db          master-893cc28  b6034d718  1 hour ago  146MB
-mikrokosmos/gitlab-ce             master-893cc28  d724b3c62  1 hour ago  1.88GB
-mikrokosmos/trac-myproject        master-893cc28  c8360192a  1 hour ago  312MB
-mikrokosmos/rproxy                master-893cc28  6ac7f8d9f  1 hour ago  23.1MB
-mikrokosmos/redmine               master-893cc28  4c77c7787  1 hour ago  505MB
-mikrokosmos/redmine-db            master-893cc28  8c8c2a02d  1 hour ago  146MB
-mikrokosmos/trac-db               master-893cc28  5fa7da7fd  1 hour ago  146MB
-mikrokosmos/trac                  master-893cc28  4dfb6687d  1 hour ago  312MB
-mikrokosmos/postgres              master-893cc28  e680524bd  1 hour ago  146MB
-mikrokosmos/alpine-latest-stable  master-893cc28  ceef70871  1 hour ago  11.7MB
+REPOSITORY                        TAG  IMAGE ID   CREATED     SIZE
+mikrokosmos/nexus3                1.0  e3f8dd42e  1 hour ago  635MB
+mikrokosmos/sonarqube             1.0  68b8dc59e  1 hour ago  483MB
+mikrokosmos/sonarqube-db          1.0  b6034d718  1 hour ago  146MB
+mikrokosmos/gitlab-ce             1.0  d724b3c62  1 hour ago  1.88GB
+mikrokosmos/trac-myproject        1.0  c8360192a  1 hour ago  312MB
+mikrokosmos/rproxy                1.0  6ac7f8d9f  1 hour ago  23.1MB
+mikrokosmos/redmine               1.0  4c77c7787  1 hour ago  505MB
+mikrokosmos/redmine-db            1.0  8c8c2a02d  1 hour ago  146MB
+mikrokosmos/trac-db               1.0  5fa7da7fd  1 hour ago  146MB
+mikrokosmos/trac                  1.0  4dfb6687d  1 hour ago  312MB
+mikrokosmos/postgres              1.0  e680524bd  1 hour ago  146MB
+mikrokosmos/alpine-latest-stable  1.0  ceef70871  1 hour ago  11.7MB
 ----
 
+.Initialize Mikrokosmos
 [source,bash]
 ----
 cd mikrokosmos-docker
-./deploy.sh run
+./deploy.sh init
 ----
 
 .deploy.sh ps
@@ -146,6 +143,9 @@ On macOS please add local hostname too.
 ----
 
 === Using Mikrokosmos
+
+Nexus
+"Enable anonymous access"
 
 ==== IntelliJ
 

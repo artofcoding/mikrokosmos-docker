@@ -54,9 +54,7 @@ function docker_compose_build() {
         --build-arg "VERSION=${VERSION}"
 }
 
-echo "*"
-echo "* Mikrokosmos Version ${VERSION}"
-echo "*"
+#echo "Mikrokosmos Version ${VERSION}"
 
 cmd=${1:-usage}
 case "${cmd}" in
@@ -80,7 +78,7 @@ case "${cmd}" in
     build)
         for cnt in alpine-latest-stable maven postgres
         do
-            if [[ $(docker image ls | grep -c "${cnt}") = 0 ]]
+            if [[ $(docker image ls | grep -c "mikrokosmos/${cnt}") = 0 ]]
             then
                 build_library "${cnt}"
             fi
@@ -122,7 +120,8 @@ case "${cmd}" in
             rproxy
         echo "* done"
     ;;
-    run)
+    init)
+        $0 stop
         echo ""
         echo "*"
         echo "* Running Project Management, CI/CD and Reverse Proxy"
@@ -135,15 +134,19 @@ case "${cmd}" in
             -f docker-compose.cicd.yml \
             up -d
         echo "* done"
+        echo ""
+        echo "* Waiting 15 seconds until all systems are initialized"
+        echo ""
+        sleep 15
         #YOUTRACK_PWD=$(docker exec \
         #    mikrokosmos_youtrack_1 \
         #    cat /opt/youtrack/conf/internal/services/configurationWizard/wizard_token.txt)
-        # trac password takes some time
-        sleep 3
         TRAC_PWD=$(docker logs mikrokosmos_trac-myproject_1 2>&1 \
             | grep "Password is" \
             | awk -F':' '{print $2}' \
             | tr -d ' ')
+        NEXUS_PWD=$(docker exec -it mikrokosmos_nexus_1 \
+            cat /nexus-data/admin.password)
         echo ""
         echo "**************************************************"
         echo "*"
@@ -155,7 +158,7 @@ case "${cmd}" in
         #echo "*     http://youtrack.local (${YOUTRACK_PWD})"
         echo "*     http://trac.local (${TRAC_PWD})"
         echo "*     http://redmine.local"
-        echo "*     http://repo.local"
+        echo "*     http://repo.local (${NEXUS_PWD})"
         echo "*     http://quality.local"
         echo "*"
         echo "**************************************************"
@@ -185,7 +188,7 @@ case "${cmd}" in
             -f docker-compose.cicd.yml \
             stop
     ;;
-    usage)
+    *)
         echo "usage: $0 <build-library | build-template | build | run | stop>"
         exit 1
     ;;
