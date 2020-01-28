@@ -1,0 +1,43 @@
+# Map hosts to port
+map $http_host $port {
+    hostnames;
+
+    default 9999;
+
+    # PM
+    trac.* 443;
+    redmine.* 443;
+
+    # CICD
+    sonarqube.* 443;
+    repo.* 443;
+
+    # development = localhost
+    localhost 8543;
+    # test = test.example.org
+    test.* 8643;
+    # qa = qa.example.org
+    qa.* 8443;
+    # production = www.example.org
+    www.* 443;
+}
+
+# Map host to context path
+map $http_host $context {
+    hostnames;
+
+    default /unknown/;
+
+    # PM
+    trac.* /;
+    redmine.* /;
+
+    # CICD
+    sonarqube.* /;
+    repo.* /;
+
+    localhost /app/;
+    test.* /app/;
+    qa.* /app/;
+    www.* /app/;
+}

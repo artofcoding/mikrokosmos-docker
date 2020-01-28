@@ -12,7 +12,7 @@ services:
   #    - gitlab-log:/var/log/gitlab
   #    - gitlab-opt:/var/opt/gitlab
   #  networks:
-  #    - mikrokosmos-cicd
+  #    - cicd
   #  expose:
   #    - 8080
   sonarqube-db:
@@ -21,7 +21,7 @@ services:
     image: mikrokosmos/sonarqube-db:${VERSION}
     restart: unless-stopped
     networks:
-      - mikrokosmos-cicd
+      - cicd
     expose:
       - 5432
   sonarqube:
@@ -43,7 +43,7 @@ services:
       - sonarqube_logs:/opt/sonarqube/logs
       - sonarqube_data:/opt/sonarqube/data
     networks:
-      - mikrokosmos-cicd
+      - cicd
     expose:
       - 9000
   nexus:
@@ -59,7 +59,7 @@ services:
       - nexus_data:/nexus-data
       - nexus_backup:/nexus-backup
     networks:
-      - mikrokosmos-cicd
+      - cicd
     expose:
       - 8081
     ports:
@@ -87,7 +87,7 @@ volumes:
     driver: local
 
 networks:
-  mikrokosmos-cicd:
+  cicd:
     driver: bridge
     internal: false
     external: false

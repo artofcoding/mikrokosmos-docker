@@ -12,10 +12,11 @@ services:
   #  command: tail -f /dev/null
   port80:
     build:
-      context: port80
+      context: .
+      dockerfile: port80/Dockerfile
     image: mikrokosmos/endpoint-port80:${VERSION}
     hostname: port80
-    restart: "always"
+    restart: unless-stopped
     environment:
       - TZ=Europe/Berlin
     volumes:
@@ -28,10 +29,11 @@ services:
       - "8080:8080"
   rproxy:
     build:
-      context: rproxy
+      context: .
+      dockerfile: rproxy/Dockerfile
     image: mikrokosmos/endpoint-rproxy:${VERSION}
     hostname: rproxy
-    restart: "always"
+    restart: unless-stopped
     environment:
       - TZ=Europe/Berlin
     volumes:
@@ -39,6 +41,8 @@ services:
       - rproxy_etc_letsencrypt:/etc/letsencrypt:ro
       - rproxy_html:/usr/share/nginx/html:ro
     networks:
+      - mikrokosmos_pm
+      - mikrokosmos_cicd
       - development-backend
       - test-backend
       - qa-backend
@@ -52,7 +56,7 @@ services:
       context: rproxy-certbot
     image: mikrokosmos/endpoint-rproxy-certbot:${VERSION}
     hostname: rproxy-certbot
-    restart: "always"
+    restart: unless-stopped
     depends_on:
       - port80
       - rproxy
@@ -83,6 +87,14 @@ networks:
     driver: bridge
     external: false
     internal: false
+  mikrokosmos_pm:
+    driver: bridge
+    internal: true
+    external: true
+  mikrokosmos_cicd:
+    driver: bridge
+    internal: true
+    external: true
   development-backend:
     name: development-backend
     driver: bridge

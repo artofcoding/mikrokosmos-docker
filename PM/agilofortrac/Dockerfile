@@ -26,23 +26,18 @@ RUN pip install babel docutils pygments pytz textile \
     && pip install Trac \
     && mkdir ${TRAC_DATA}
 
-RUN pip install trac-UserPicturesPlugin \
-    && pip install 'https://trac-hacks.org/browser/tracworkflowadminplugin/0.12/?rev=latest&format=zip' \
-    && easy_install-2.7 https://trac-hacks.org/svn/iniadminplugin/0.11 \
-    && easy_install-2.7 https://trac-hacks.org/svn/cardsplugin/trunk
-
 # AgiloForTrac
 # http://www.agilofortrac.com/documentation/installation-guide/
 ARG AGILO_VERSION="0.9.15"
 ARG AGILO_DIST="agilo-source-${AGILO_VERSION}-tar.gz"
 RUN curl -L \
-        -o ${TRAC_DATA}/${AGILO_DIST} \
+        -o "${TRAC_DATA}/${AGILO_DIST}" \
         http://www.agilofortrac.com/download/${AGILO_DIST} \
-    && tar -C ${TRAC_DATA} -xzf ${TRAC_DATA}/${AGILO_DIST} \
-    && cd ${TRAC_DATA}/agilo-${AGILO_VERSION} >/dev/null \
+    && tar -C ${TRAC_DATA} -xzf "${TRAC_DATA}/${AGILO_DIST}" \
+    && cd "${TRAC_DATA}/agilo-${AGILO_VERSION}" >/dev/null \
     && python setup.py install \
-    && cd ..
-# TODO trac-admin /var/trac/MyProject upgrade --no-backup
-# TODO trac-admin /var/trac/MyProject wiki upgrade
+    && cd .. \
+    && trac-admin "${TRAC_DATA}"/MyProject upgrade --no-backup \
+    && trac-admin "${TRAC_DATA}"/MyProject wiki upgrade
 
 VOLUME /var/trac

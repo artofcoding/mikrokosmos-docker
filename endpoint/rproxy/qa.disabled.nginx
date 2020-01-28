@@ -1,17 +1,19 @@
-upstream app_development {
-    server app-development:8080;
+upstream app_qa {
+    server app-qa:8080;
 }
 
 server {
 
-    listen 8543 ssl;
-    server_name localhost;
+    include conf.d/rproxy-variables.nginx;
+
+    listen 8443 ssl;
+    server_name qa.example.org;
 
     access_log /proc/self/fd/1 main;
     error_log /proc/self/fd/2 info;
 
-    ssl_certificate /etc/letsencrypt/selfsigned/development/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/selfsigned/development/privkey.pem;
+    ssl_certificate /etc/letsencrypt/selfsigned/qa..$domain/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/selfsigned/qa..$domain/privkey.pem;
     #include /etc/letsencrypt/options-ssl-nginx.conf;
     #ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
     ssl_protocols TLSv1.2 TLSv1.3;
@@ -41,14 +43,14 @@ server {
     gzip_comp_level 6;
 
     more_clear_headers 'X-Powered-By';
-    more_set_headers "X-Frame-Options: DENY";
+    more_set_headers "X-Frame-Options: same-origin";
     more_set_headers "X-Content-Type-Options: nosniff";
     more_set_headers "X-XSS-Protection: 1; mode=block;";
-    #more_set_headers "Content-Security-Policy: default-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; script-src 'self'";
-    #more_set_headers "X-Content-Security-Policy: default-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; script-src 'self'";
-    #more_set_headers "X-WebKit-CSP: default-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; script-src 'self'";
+    more_set_headers "Content-Security-Policy: default-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; script-src 'self'";
+    more_set_headers "X-Content-Security-Policy: default-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; script-src 'self'";
+    more_set_headers "X-WebKit-CSP: default-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; script-src 'self'";
     # nginx-debug doesn not work with headers_more module
-    #add_header X-Frame-Options DENY;
+    #add_header X-Frame-Options same-origin;
     #add_header X-Content-Type-Options nosniff;
     #add_header X-XSS-Protection "1; mode=block;";
     #add_header Content-Security-Policy "default-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; script-src 'self'";
@@ -80,7 +82,7 @@ server {
     # Application
     #
 
-    location $context/ {
+    location /app/ {
         access_log /proc/self/fd/2 main;
         #proxy_bind $remote_addr transparent;
         proxy_http_version 1.1;
@@ -95,7 +97,7 @@ server {
         # Mitigate httpoxy attack
         proxy_set_header Proxy "";
         proxy_pass_request_headers on;
-        proxy_pass http://app_development$context/;
+        proxy_pass http://appp_qa/app/;
         proxy_redirect default;
         #proxy_set_header Accept-Encoding "";
     }

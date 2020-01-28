@@ -1,4 +1,3 @@
-ARG VERSION
 FROM nginx:1.17-alpine AS base
 
 LABEL maintainer="Ralf Bensmann <ralf@art-of-coding.eu>"
@@ -12,13 +11,16 @@ RUN apk update \
     && apk --no-cache add \
         tzdata \
         nginx \
+        openssl \
+        certbot-nginx \
+        curl \
+        git \
     && cp /usr/share/zoneinfo/${TZ} /etc/localtime \
     && echo "${TZ}" >/etc/timezone \
     && rm /etc/nginx/conf.d/default.conf* \
-    && adduser -u 82 -D -S -G www-data www-data
+    && adduser -u 82 -D -S -G www-data www-data \
+    && git clone https://github.com/h5bp/server-configs-nginx.git /etc/nginx/h5bp \
+    && apk del git
 
-FROM base
-COPY nginx.conf /etc/nginx
-COPY *.nginx /etc/nginx/conf.d/
 VOLUME ["/etc/nginx", "/usr/share/nginx/certbot"]
 CMD ["nginx"]

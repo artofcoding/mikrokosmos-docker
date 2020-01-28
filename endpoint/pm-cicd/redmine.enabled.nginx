@@ -1,0 +1,55 @@
+upstream redmine_upstream {
+    server redmine:3000;
+}
+
+server {
+
+    listen 80;
+    server_name redmine.*;
+
+    access_log /proc/self/fd/1 main;
+    error_log /proc/self/fd/2 info;
+
+    include conf.d/certbot.nginx;
+
+    gzip on;
+    gzip_types      text/plain text/css application/javascript application/json application/xml;
+    gzip_proxied    no-cache no-store no_last_modified private expired auth;
+    gzip_min_length 256;
+    gzip_comp_level 6;
+
+    location ~ /\. {
+        deny all;
+    }
+    location = /robots.txt {
+        allow all;
+        log_not_found off;
+        access_log off;
+    }
+    location = /favicon.ico {
+        allow all;
+        log_not_found off;
+        access_log off;
+    }
+
+    location / {
+        access_log /proc/self/fd/2 main;
+        #proxy_bind $remote_addr transparent;
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+        proxy_buffering off;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host:$server_port;
+        proxy_set_header X-Forwarded-Port $server_port;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        # Mitigate httpoxy attack
+        proxy_set_header Proxy "";
+        proxy_pass_request_headers on;
+        proxy_pass http://redmine_upstream/;
+        proxy_redirect default;
+        #proxy_set_header Accept-Encoding "";
+    }
+
+}

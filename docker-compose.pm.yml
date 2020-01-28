@@ -7,7 +7,7 @@ services:
     image: mikrokosmos/trac-db:${VERSION}
     restart: unless-stopped
     networks:
-      - mikrokosmos-pm
+      - pm
     expose:
       - 5432
   trac-myproject:
@@ -20,7 +20,7 @@ services:
     volumes:
       - trac_data:/var/trac
     networks:
-      - mikrokosmos-pm
+      - pm
     expose:
       - 8000
   redmine-db:
@@ -29,7 +29,7 @@ services:
     image: mikrokosmos/redmine-db:${VERSION}
     restart: unless-stopped
     networks:
-      - mikrokosmos-pm
+      - pm
     expose:
       - 5432
   redmine:
@@ -40,7 +40,7 @@ services:
     depends_on:
       - redmine-db
     networks:
-      - mikrokosmos-pm
+      - pm
     expose:
       - 3000
   #openproject:
@@ -52,7 +52,7 @@ services:
   #    - openproject_pgdata:/var/openproject/pgdata
   #    - openproject_static:/var/openproject/assets
   #  networks:
-  #    - mikrokosmos-pm
+  #    - pm
   #  expose:
   #    - 8080
   # Free for up to 10 users
@@ -67,7 +67,7 @@ services:
   #    - youtrack_logs:/opt/youtrack/logs
   #    - youtrack_backups:/opt/youtrack/backups
   #  networks:
-  #    - mikrokosmos-pm
+  #    - pm
   #  expose:
   #    - 8080
 
@@ -88,7 +88,7 @@ volumes:
   #  driver: local
 
 networks:
-  mikrokosmos-pm:
+  pm:
     driver: bridge
     internal: false
     external: false

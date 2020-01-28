@@ -29,51 +29,37 @@ function show_usage() {
 [[ $# -lt 1 ]] && show_usage
 
 execdir=$(pushd `dirname $0` >/dev/null ; pwd ; popd >/dev/null)
-vardir=$(pushd "${execdir}/var" >/dev/null ; pwd ; popd >/dev/null)
+endpointdir=$(pushd "${execdir}/endpoint" >/dev/null ; pwd ; popd >/dev/null)
+vardir=$(pushd "${endpointdir}/var" >/dev/null ; pwd ; popd >/dev/null)
 
 ENV_NAME="endpoint"
 export ENV_NAME
+
 CURRENT_BRANCH="$(git branch --show-current)"
 HEAD_COMMIT_HASH="$(git rev-parse --short HEAD)"
-VERSION="${CURRENT_BRANCH}-${HEAD_COMMIT_HASH}"
+CURRENT_TAG="$(git --no-pager tag -l --points-at HEAD)"
+if [ -n "${CURRENT_TAG}" ]
+then
+    VERSION="${CURRENT_TAG:1}"
+else
+    VERSION="${CURRENT_BRANCH}-${HEAD_COMMIT_HASH}"
+fi
 export VERSION
 
 function endpoint_docker() {
     docker-compose \
-        -p ${ENV_NAME} \
-        -f ${execdir}/docker-compose.yml \
+        -p "${ENV_NAME}" \
+        -f "${endpointdir}"/docker-compose.yml \
         "$@"
 }
 
 mode=${1:-} ; shift
 case "${mode}" in
-    build-images)
+    build)
         endpoint_docker build \
-            --build-arg ENV_NAME=${ENV_NAME} \
-            --build-arg VERSION=${VERSION} \
+            --build-arg "ENV_NAME=${ENV_NAME}" \
+            --build-arg "VERSION=${VERSION}" \
             --compress
-    ;;
-    clean-images)
-        if [[ $# != 1 ]]
-        then
-            echo "usage: $0 clean-images <tag>"
-            exit 1
-        fi
-        tag=$1
-        set +o errexit
-        for container in ${CONTAINERS}
-        do
-            docker image rm ${DOCKER_IMAGE_PREFIX}/endpoint-${container}:${tag}
-        done
-        set -o errexit
-    ;;
-    remove)
-        set +o errexit
-        $0 down
-        docker volume rm endpoint_port80_etc_nginx
-        docker volume rm endpoint_rproxy_etc_nginx
-        docker volume rm endpoint_rproxy_html
-        set -o errexit
     ;;
     init)
         endpoint_docker up -d
@@ -85,14 +71,16 @@ case "${mode}" in
         endpoint_docker exec rproxy-certbot /nginx-tls.sh production self-signed
         if [[ -n "${CUSTOM_DOMAIN:-}" ]]
         then
-            if [[ -f ${vardir}/${CUSTOM_DOMAIN}/privkey.pem && -f ${vardir}/${CUSTOM_DOMAIN}/intermediate.pem && -f ${vardir}/${CUSTOM_DOMAIN}/server.pem  ]]
+            if [[ -f "${vardir}/${CUSTOM_DOMAIN}"/privkey.pem \
+               && -f "${vardir}/${CUSTOM_DOMAIN}"/intermediate.pem \
+               && -f "${vardir}/${CUSTOM_DOMAIN}"/server.pem ]]
             then
                 domain_cert_path="/etc/letsencrypt/custom/${CUSTOM_DOMAIN}"
-                endpoint_docker exec rproxy-certbot mkdir -p ${domain_cert_path}
+                endpoint_docker exec rproxy-certbot mkdir -p "${domain_cert_path}"
                 rproxycertbot="${ENV_NAME}_rproxy-certbot_1"
-                docker cp ${vardir}/${CUSTOM_DOMAIN}/privkey.pem ${rproxycertbot}:${domain_cert_path}
-                docker cp ${vardir}/${CUSTOM_DOMAIN}/intermediate.pem ${rproxycertbot}:${domain_cert_path}
-                docker cp ${vardir}/${CUSTOM_DOMAIN}/server.pem ${rproxycertbot}:${domain_cert_path}
+                docker cp "${vardir}/${CUSTOM_DOMAIN}"/privkey.pem "${rproxycertbot}:${domain_cert_path}"
+                docker cp "${vardir}/${CUSTOM_DOMAIN}"/intermediate.pem "${rproxycertbot}:${domain_cert_path}"
+                docker cp "${vardir}/${CUSTOM_DOMAIN}"/server.pem "${rproxycertbot}:${domain_cert_path}"
                 endpoint_docker exec rproxy-certbot /nginx-tls.sh production custom
             fi
         fi
@@ -113,9 +101,6 @@ case "${mode}" in
             exit 1
         fi
         endpoint_docker restart "$@"
-    ;;
-    down)
-        endpoint_docker down "$@"
     ;;
     ps)
         endpoint_docker ps

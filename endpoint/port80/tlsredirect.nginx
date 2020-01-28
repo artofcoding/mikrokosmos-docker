@@ -1,0 +1,22 @@
+include conf.d/host_context_map.nginx;
+
+server {
+
+    listen 80 default_server;
+    listen 8080;
+    server_name _;
+
+    root /usr/share/nginx/html;
+
+    location /.well-known/acme-challenge/ {
+        root /usr/share/nginx/certbot;
+    }
+
+    location = / {
+        return 301 https://$host:$port$context;
+    }
+    location / {
+        return 301 https://$host:$port$request_uri;
+    }
+
+}
