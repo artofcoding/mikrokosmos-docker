@@ -14,7 +14,7 @@ services:
       - mikrokosmos-pm
       - mikrokosmos-cicd
     ports:
-    - "80:80"
+      - "443:443"
 
 networks:
   mikrokosmos-cicd:

@@ -4,15 +4,13 @@ upstream sonarqube_upstream {
 
 server {
 
-    include conf.d/variables.nginx;
-
     listen 80;
     server_name sonarqube.*;
 
     access_log /proc/self/fd/1 main;
     error_log /proc/self/fd/2 info;
 
-    root /usr/share/nginx/html;
+    include conf.d/certbot.nginx;
 
     gzip on;
     gzip_types      text/plain text/css application/javascript application/json application/xml;

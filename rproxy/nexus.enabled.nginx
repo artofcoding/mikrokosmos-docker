@@ -1,10 +1,8 @@
-upstream repository_upstream {
+upstream nexus_upstream {
     server nexus:8081;
 }
 
 server {
-
-    include conf.d/variables.nginx;
 
     listen 80;
     server_name repo.*;
@@ -12,7 +10,7 @@ server {
     access_log /proc/self/fd/1 main;
     error_log /proc/self/fd/2 info;
 
-    root /usr/share/nginx/html;
+    include conf.d/certbot.nginx;
 
     gzip on;
     gzip_types      text/plain text/css application/javascript application/json application/xml;
@@ -52,17 +50,17 @@ server {
         # Mitigate httpoxy attack
         proxy_set_header Proxy "";
         proxy_pass_request_headers on;
-        proxy_pass http://repository_upstream/nexus/;
+        proxy_pass http://nexus_upstream/nexus/;
         proxy_redirect default;
         #proxy_set_header Accept-Encoding "";
     }
 
 }
 
-upstream docker_upstream {
-    server nexus:8997;
-}
-
-upstream docker_private_upstream {
-    server nexus:8998;
-}
+#upstream docker_upstream {
+#    server nexus:8997;
+#}
+#
+#upstream docker_private_upstream {
+#    server nexus:8998;
+#}
