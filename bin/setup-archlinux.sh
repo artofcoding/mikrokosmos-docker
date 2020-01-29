@@ -106,9 +106,14 @@ else
     git pull
     popd >/dev/null
 fi
-# Deploy
 pushd mikrokosmos-docker >/dev/null
-./deploy.sh build
+echo ""
+echo "* Please initialize or start Mikrokosmos Container yourself, depending on your needs:"
+echo "* Go to $(pwd) and e.g."
+echo "*     ./deploy.sh build-pm"
+echo "*     ./deploy.sh build-cicd"
+echo "*     ./deploy.sh init"
+echo ""
 popd >/dev/null
 
 exit 0
