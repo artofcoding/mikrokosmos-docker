@@ -5,7 +5,7 @@ upstream repository_upstream {
 server {
 
     listen 80;
-    server_name repo.*;
+    server_name nexus.*;
 
     access_log /proc/self/fd/1 main;
     error_log /proc/self/fd/2 info;
