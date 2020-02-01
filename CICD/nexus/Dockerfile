@@ -1,5 +1,5 @@
 ARG VERSION
-FROM sonatype/nexus3:3.20.0 AS base
+FROM sonatype/nexus3:3.20.1 AS base
 
 LABEL maintainer="Ralf Bensmann <ralf@art-of-coding.eu>"
 LABEL vendor="Art of Coding UG"
