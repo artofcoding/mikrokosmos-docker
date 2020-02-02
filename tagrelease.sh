@@ -11,6 +11,7 @@ fi
 
 TAG=$1
 
+git tag -d "${TAG}"
 git push origin :refs/tags/"${TAG}"
 git tag -f "${TAG}"
 git push --tags origin HEAD
