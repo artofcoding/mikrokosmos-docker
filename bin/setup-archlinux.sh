@@ -108,11 +108,12 @@ else
 fi
 pushd mikrokosmos-docker >/dev/null
 echo ""
-echo "* Please initialize or start Mikrokosmos Container yourself, depending on your needs:"
+echo "* Please initialize or start Mikrokosmos Container yourself, depending on your needs."
+echo "* Set environment variable MIKROKOSMOS_DOMAIN to your domain, e.g. 'example.com'"
 echo "* Go to $(pwd) and e.g."
-echo "*     ./deploy.sh build-pm"
-echo "*     ./deploy.sh build-cicd"
 echo "*     ./deploy.sh init"
+echo "* or"
+echo "*     ./deploy.sh start"
 echo ""
 popd >/dev/null
 
