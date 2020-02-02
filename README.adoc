@@ -7,11 +7,11 @@
 
 This project provides your own Docker-based development and deployment environment.
 
-* Docker *Library*
+* Container *Library*
 ** Alpine "latest-stable" base image
 ** OpenSSH base image
 ** PostgreSQL
-** Redis along with backup solution
+** Redis, along with backup solution
 ** Jekyll
 ** asciidoc server
 * *P* roject *M* anagement
@@ -28,13 +28,15 @@ This project provides your own Docker-based development and deployment environme
 ** HTTP/TLS Endpoint
 
 .Requirements
-* Docker >=19.03.5 installed
+* Tested with Docker >=19.03.5
 
-=== Setup Mikrokosmos
+=== Setup
+
+NOTE: To setup Mikrokosmos for local usage see <<local-usage,below>>.
 
 [source,bash]
 ----
-curl https://raw.githubusercontent.com/artofcoding/mikrokosmos-docker/master/bin/setup-archlinux.sh | bash
+curl https://raw.githubusercontent.com/rbe/mikrokosmos-docker/master/bin/setup-archlinux.sh | bash
 ----
 
 The script automatically checks out a release and builds Mikrokosmos project management an CI/CD environment:
@@ -44,19 +46,23 @@ The script automatically checks out a release and builds Mikrokosmos project man
 git clone \
     --depth 1 \
     --branch v1.0 \
-    https://github.com/artofcoding/mikrokosmos-docker.git
-cd mikrokosmos-docker
-./deploy.sh build
+    https://github.com/rbe/mikrokosmos-docker.git
 ----
 
-.Docker Images
+.Initialize Mikrokosmos for a certain domain
+[source,bash]
+----
+cd mikrokosmos-docker
+MIKROKOSMOS_DOMAIN=example.com ./deploy.sh init
+----
+
+.Container Images
 [source,text]
 ----
 REPOSITORY                        TAG  IMAGE ID   CREATED     SIZE
 mikrokosmos/nexus3                1.0  e3f8dd42e  1 hour ago  635MB
 mikrokosmos/sonarqube             1.0  68b8dc59e  1 hour ago  483MB
 mikrokosmos/sonarqube-db          1.0  b6034d718  1 hour ago  146MB
-mikrokosmos/gitlab-ce             1.0  d724b3c62  1 hour ago  1.88GB
 mikrokosmos/trac-myproject        1.0  c8360192a  1 hour ago  312MB
 mikrokosmos/rproxy                1.0  6ac7f8d9f  1 hour ago  23.1MB
 mikrokosmos/redmine               1.0  4c77c7787  1 hour ago  505MB
@@ -65,13 +71,6 @@ mikrokosmos/trac-db               1.0  5fa7da7fd  1 hour ago  146MB
 mikrokosmos/trac                  1.0  4dfb6687d  1 hour ago  312MB
 mikrokosmos/postgres              1.0  e680524bd  1 hour ago  146MB
 mikrokosmos/alpine-latest-stable  1.0  ceef70871  1 hour ago  11.7MB
-----
-
-.Initialize Mikrokosmos
-[source,bash]
-----
-cd mikrokosmos-docker
-./deploy.sh init
 ----
 
 .deploy.sh ps
@@ -89,6 +88,7 @@ mikrokosmos_trac-db_1         docker-entrypoi ...   Up      5432/tcp
 mikrokosmos_trac-myproject_1  /trac.sh              Up      8000/tcp
 ----
 
+[[local-usage]]
 ==== Local Usage
 
 .Requirements
@@ -107,12 +107,6 @@ Add one or more of the following entries to your local host name file, depending
 
 | Redmine
 | redmine.local
-
-| (YouTrack)
-| youtrack.local
-
-| (GitLab)
-| gitlab.local
 
 | Sonatype Nexus
 | nexus.local
@@ -142,25 +136,117 @@ On macOS please add local hostname too.
 127.0.0.1  localhost  trac.local  nexus.local  sonarqube.local
 ----
 
+.Initialize Mikrokosmos for local usage
+[source,bash]
+----
+cd mikrokosmos-docker
+./deploy.sh init
+----
+
 ==== Sonatype Nexus3
 
-==== IntelliJ
+.Installation
+* Choose "Enable anonymous access" if desired
 
-.Task Management
-[cols="a,a,a",options="header"]
+.Users & Roles
+* Role `nx-deploy`
+** Rights: `nx-repository-view-*-*-*`
+* User `deploy`
+** Roles: nx-deploy
+
+===== Docker
+
+.Blob Stores
+* docker
+
+.Realms
+* Docker Bearer Token Realm
+
+.General Docker repository settings
+* "Allow anonymous docker pull (Docker Bearer Token Realm required)"
+* "Enable Docker V1 API"
+
+.Pull through Docker Group
+[source,bash]
+----
+docker pull localhost:8997/httpd:2.4-alpine
+----
+
+.Push to private Docker repository
+[source,bash]
+----
+docker tag your-own-image:1 localhost:8998/your-own-image:1
+docker push localhost:8998/your-own-image:1
+----
+
+===== Maven
+
+.Blob Stores
+* maven
+
+.Repositories
+[cols="a,a,a,a",options="header"]
 |====
-| System
-| URL
-| Notes
+| Name
+| Local URL
+| Type
+| Settings
 
-| trac
-| http://trac.local/login/xmlrpc
-| Search: `search!=closed`
+4+| Group "Maven Public" +
+Access through http://nexus.local/maven-public/
 
-| Redmine
-| http://redmine.local
-| Activate REST API under Aministration -> Configuration -> API
+| Local Maven Releases
+| http://nexus.local/maven-releases/
+| hosted
+|
+
+| Local Maven Snapshots
+| http://nexus.local/maven-snapshots/
+| hosted
+|
+
+| Maven Central
+| http://nexus.local/maven-central/
+| proxy
+| https://repo1.maven.org/maven2/
+
+| JCenter Bintray
+| http://nexus.local/maven-bintray/
+| proxy
+| https://jcenter.bintray.com
+
+| Sonatype Snapshots
+| http://nexus.local/maven.sonatype-snapshots/
+| proxy
+| https://oss.sonatype.org/content/repositories/snapshots/
+
+4+| Group "Docker" +
+Access through http://nexus.local/docker/
+
+| Docker Group
+| http://nexus.local/docker/
+| hosted
+| Port 8997
+
+| Docker Private Registry
+| http://nexus.local/docker-private/
+| hosted
+| Port 8998
+
+| Docker Hub
+| http://nexus.local/docker-hub/
+| proxy
+| https://registry-1.docker.io/ +
+"Use Docker Hub"
+
+| Red Hat Docker Registry
+| http://nexus.local/docker-redhat/
+| proxy
+| https://registry.access.redhat.com
+
 |====
+
+=== Usage
 
 ==== Maven
 
@@ -191,7 +277,7 @@ On macOS please add local hostname too.
         <mirror>
             <id>mirror-central</id>
             <name>mirror-central</name>
-            <url>http://repo.local/nexus/repository/maven-public/</url>
+            <url>http://nexus.local/nexus/repository/maven-public/</url>
             <mirrorOf>central</mirrorOf>
         </mirror>
     </mirrors>
@@ -205,114 +291,32 @@ On macOS please add local hostname too.
     <distributionManagement>
         <snapshotRepository>
             <id>nexus-snapshots</id>
-            <url>http://localhost:8999/nexus/repository/maven-snapshots/</url>
+            <url>http://nexus.local/nexus/repository/maven-snapshots/</url>
         </snapshotRepository>
         <repository>
             <id>nexus-releases</id>
-            <url>http://localhost:8999/nexus/repository/maven-releases/</url>
+            <url>http://nexus.local/nexus/repository/maven-releases/</url>
         </repository>
     </distributionManagement>
 </project>
 ----
 
-=== Repository Sonatype Nexus3
+==== IntelliJ
 
-.Users & Roles
-* Role `nx-deploy`
-** Rights: `nx-repository-view-*-*-*`
-* User `deploy`
-** Roles: nx-deploy
-
-==== Docker
-
-.Blob Stores
-* docker
-
-.Realms
-* Docker Bearer Token Realm
-
-.General Docker repository settings
-* "Allow anonymous docker pull (Docker Bearer Token Realm required)"
-* "Enable Docker V1 API"
-
-.Pull through Docker Group
-[source,bash]
-----
-docker pull localhost:8997/httpd:2.4-alpine
-----
-
-.Push to private Docker repository
-[source,bash]
-----
-docker tag your-own-image:1 localhost:8998/your-own-image:1
-docker push localhost:8998/your-own-image:1
-----
-
-==== Maven
-
-.Blob Stores
-* maven
-
-.Repositories
-[cols="a,a,a,a",options="header"]
+.Task Management
+[cols="a,a,a",options="header"]
 |====
-| Name
-| Local URL
-| Type
-| Settings
+| System
+| URL
+| Notes
 
-4+| Group "Maven Public" +
-Access through http://repo.local/maven-public/
+| trac
+| http://trac.local/login/xmlrpc
+| Search: `search!=closed`
 
-| Local Maven Releases
-| http://repo.local/maven-releases/
-| hosted
-|
-
-| Local Maven Snapshots
-| http://repo.local/maven-snapshots/
-| hosted
-|
-
-| Maven Central
-| http://repo.local/maven-central/
-| proxy
-| https://repo1.maven.org/maven2/
-
-| JCenter Bintray
-| http://repo.local/maven-bintray/
-| proxy
-| https://jcenter.bintray.com
-
-| Sonatype Snapshots
-| http://repo.local/maven.sonatype-snapshots/
-| proxy
-| https://oss.sonatype.org/content/repositories/snapshots/
-
-4+| Group "Docker" +
-Access through http://repo.local/docker/
-
-| Docker Group
-| http://repo.local/docker/
-| hosted
-| Port 8997
-
-| Docker Private Registry
-| http://repo.local/docker-private/
-| hosted
-| Port 8998
-
-| Docker Hub
-| http://repo.local/docker-hub/
-| proxy
-| https://registry-1.docker.io/ +
-"Use Docker Hub"
-
-| Red Hat Docker Registry
-| http://repo.local/docker-redhat/
-| proxy
-| https://registry.access.redhat.com
-
+| Redmine
+| http://redmine.local
+| Activate REST API under Aministration -> Configuration -> API
 |====
 
 ==== Resources
