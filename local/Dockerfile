@@ -21,6 +21,7 @@ RUN apk update \
 
 FROM base
 COPY nginx.conf /etc/nginx
-COPY *.nginx /etc/nginx/conf.d/
+COPY enabled/*.nginx /etc/nginx/conf.d/enabled/
+COPY disabled/*.nginx /etc/nginx/conf.d/disabled/
 VOLUME ["/etc/nginx", "/usr/share/nginx/certbot"]
 CMD ["nginx"]

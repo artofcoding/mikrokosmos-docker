@@ -3,25 +3,24 @@ version: '3.7'
 services:
   rproxy:
     build:
-      context: rproxy
-    image: mikrokosmos/rproxy:${VERSION}
+      context: local
+    image: mikrokosmos/local:${VERSION}
     restart: unless-stopped
     depends_on:
-      - trac-myproject
       - nexus
       - sonarqube
     networks:
-      - mikrokosmos-pm
-      - mikrokosmos-cicd
+      - pm
+      - cicd
     ports:
-      - "443:443"
+      - "80:80"
 
 networks:
-  mikrokosmos-cicd:
+  cicd:
     driver: bridge
     internal: false
     external: false
-  mikrokosmos-pm:
+  pm:
     driver: bridge
     internal: false
     external: false
