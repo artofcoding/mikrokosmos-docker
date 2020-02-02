@@ -7,7 +7,8 @@ LABEL project="Mikrokosmos"
 
 COPY rproxy/nginx.conf /etc/nginx
 COPY rproxy/*.nginx /etc/nginx/conf.d/
-COPY pm-cicd/*.nginx /etc/nginx/conf.d/
+COPY rproxy/enabled/*.nginx /etc/nginx/conf.d/enabled/
+COPY rproxy/disabled/*.nginx /etc/nginx/conf.d/disabled/
 
 COPY rproxy/index.html /usr/share/nginx/html
 COPY rproxy/robots.txt /usr/share/nginx/html

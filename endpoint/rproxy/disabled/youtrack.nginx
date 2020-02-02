@@ -1,16 +1,14 @@
-upstream gitlab_upstream {
-    server gitlab:8080;
+upstream youtrack_upstream {
+    server youtrack:8080;
 }
 
 server {
 
     listen 80;
-    server_name gitlab.*;
+    server_name youtrack.*;
 
     access_log /proc/self/fd/1 main;
     error_log /proc/self/fd/2 info;
-
-    include conf.d/certbot.nginx;
 
     gzip on;
     gzip_types      text/plain text/css application/javascript application/json application/xml;
@@ -47,7 +45,7 @@ server {
         # Mitigate httpoxy attack
         proxy_set_header Proxy "";
         proxy_pass_request_headers on;
-        proxy_pass http://gitlab_upstream/;
+        proxy_pass http://youtrack_upstream/;
         proxy_redirect default;
         #proxy_set_header Accept-Encoding "";
     }

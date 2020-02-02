@@ -28,9 +28,9 @@ function show_usage() {
 }
 [[ $# -lt 1 ]] && show_usage
 
-execdir=$(pushd `dirname $0` >/dev/null ; pwd ; popd >/dev/null)
+execdir=$(pushd "$(dirname $0)" >/dev/null ; pwd ; popd >/dev/null)
 endpointdir=$(pushd "${execdir}/endpoint" >/dev/null ; pwd ; popd >/dev/null)
-vardir=$(pushd "${endpointdir}/var" >/dev/null ; pwd ; popd >/dev/null)
+certdir=$(pushd "${execdir}/certs" >/dev/null ; pwd ; popd >/dev/null)
 
 ENV_NAME="endpoint"
 export ENV_NAME
@@ -71,16 +71,16 @@ case "${mode}" in
         endpoint_docker exec rproxy-certbot /nginx-tls.sh production self-signed
         if [[ -n "${CUSTOM_DOMAIN:-}" ]]
         then
-            if [[ -f "${vardir}/${CUSTOM_DOMAIN}"/privkey.pem \
-               && -f "${vardir}/${CUSTOM_DOMAIN}"/intermediate.pem \
-               && -f "${vardir}/${CUSTOM_DOMAIN}"/server.pem ]]
+            if [[ -f "${certdir}/${CUSTOM_DOMAIN}"/privkey.pem \
+               && -f "${certdir}/${CUSTOM_DOMAIN}"/intermediate.pem \
+               && -f "${certdir}/${CUSTOM_DOMAIN}"/server.pem ]]
             then
                 domain_cert_path="/etc/letsencrypt/custom/${CUSTOM_DOMAIN}"
                 endpoint_docker exec rproxy-certbot mkdir -p "${domain_cert_path}"
                 rproxycertbot="${ENV_NAME}_rproxy-certbot_1"
-                docker cp "${vardir}/${CUSTOM_DOMAIN}"/privkey.pem "${rproxycertbot}:${domain_cert_path}"
-                docker cp "${vardir}/${CUSTOM_DOMAIN}"/intermediate.pem "${rproxycertbot}:${domain_cert_path}"
-                docker cp "${vardir}/${CUSTOM_DOMAIN}"/server.pem "${rproxycertbot}:${domain_cert_path}"
+                docker cp "${certdir}/${CUSTOM_DOMAIN}"/privkey.pem "${rproxycertbot}:${domain_cert_path}"
+                docker cp "${certdir}/${CUSTOM_DOMAIN}"/intermediate.pem "${rproxycertbot}:${domain_cert_path}"
+                docker cp "${certdir}/${CUSTOM_DOMAIN}"/server.pem "${rproxycertbot}:${domain_cert_path}"
                 endpoint_docker exec rproxy-certbot /nginx-tls.sh production custom
             fi
         fi

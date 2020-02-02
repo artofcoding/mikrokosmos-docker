@@ -7,10 +7,9 @@ map $http_host $port {
     # PM
     trac.* 443;
     redmine.* 443;
-
     # CICD
     sonarqube.* 443;
-    repo.* 443;
+    nexus.* 443;
 
     # development = localhost
     localhost 8543;
@@ -31,10 +30,9 @@ map $http_host $context {
     # PM
     trac.* /;
     redmine.* /;
-
     # CICD
     sonarqube.* /;
-    repo.* /;
+    nexus.* /;
 
     localhost /app/;
     test.* /app/;
