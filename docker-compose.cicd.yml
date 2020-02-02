@@ -62,9 +62,8 @@ services:
       - cicd
     expose:
       - 8081
-    ports:
-      - "8998:8998"
-      - "8997:8997"
+      - 8997
+      - 8998
 
 volumes:
   #gitlab-etc:
