@@ -5,10 +5,7 @@
 # All rights reserved. Use is subject to license terms.
 #
 
-PREFIX=mikrokosmos
-
-TRAC_PROJECT=MyProject
-TRAC_VERSION=1.2.5
+MIKROKOSMOS_DOMAIN=${MIKROKOSMOS_DOMAIN:-local}
 
 #
 # DO NOT MODIFY LINES BELOW
@@ -17,7 +14,11 @@ TRAC_VERSION=1.2.5
 set -o nounset
 set -o errexit
 
-export PREFIX
+CONTAINER_PREFIX=mikrokosmos
+TRAC_PROJECT=MyProject
+TRAC_VERSION=1.2.5
+
+execdir="$(pushd "$(dirname "$0")" >/dev/null ; pwd ; popd >/dev/null)"
 
 CURRENT_BRANCH="$(git branch --show-current)"
 HEAD_COMMIT_HASH="$(git rev-parse --short HEAD)"
@@ -29,8 +30,29 @@ else
     VERSION="${CURRENT_BRANCH}-${HEAD_COMMIT_HASH}"
 fi
 export VERSION
+export CONTAINER_PREFIX
 
-execdir="$(pushd "$(dirname $0)" >/dev/null ; pwd ; popd >/dev/null)"
+# Container solution
+container=""
+if [[ -x "$(command -v podman)" ]]
+then
+    container="podman"
+elif [[ -x "$(command -v docker)" ]]
+then
+    container="docker"
+fi
+if [[ -z "${container}" ]]
+then
+    echo "No container management (podman or docker) found"
+    exit 1
+fi
+
+if [[ ${MIKROKOSMOS_DOMAIN} == "local" ]]
+then
+    COMPOSE_FILES="-f docker-compose.pm.yml -f docker-compose.cicd.yml -f docker-compose.local.yml"
+else
+    COMPOSE_FILES="-f docker-compose.pm.yml -f docker-compose.cicd.yml"
+fi
 
 function build_library() {
     local lib=$1
@@ -39,9 +61,9 @@ function build_library() {
     echo "* Building ${lib}:${VERSION}"
     echo "*"
     echo ""
-    docker build \
+    ${container} build \
         --build-arg "VERSION=${VERSION}" \
-        -t "${PREFIX}/${lib}:${VERSION}" \
+        -t "${CONTAINER_PREFIX}/${lib}:${VERSION}" \
         "library/${lib}"
     echo "* done"
 }
@@ -49,7 +71,7 @@ function build_library() {
 function build_needed() {
     for cnt in alpine-latest-stable maven nginx postgres
     do
-        if [[ $(docker image ls | grep -c "mikrokosmos/${cnt}:${VERSION}") = 0 ]]
+        if [[ $(docker image ls | grep -c "mikrokosmos/${cnt}:${VERSION}") == 0 ]]
         then
             build_library "${cnt}"
         fi
@@ -59,11 +81,11 @@ function build_needed() {
 function docker_compose_build() {
     local prj=$1
     docker-compose \
-        -p "${PREFIX}" \
+        -p "${CONTAINER_PREFIX}" \
         -f "docker-compose.${prj}.yml" \
         build \
-        --build-arg "TRAC_PROJECT=${TRAC_PROJECT}" \
-        --build-arg "VERSION=${VERSION}"
+        --build-arg "VERSION=${VERSION}" \
+        --build-arg "TRAC_PROJECT=${TRAC_PROJECT}"
 }
 
 function docker_container_running() {
@@ -73,21 +95,19 @@ function docker_container_running() {
               "${cnt}" 2>/dev/null)" == "true" ]] && return 0 || return 1
 }
 
-#echo "Mikrokosmos Version ${VERSION}"
-
-cmd=${1:-usage}
+cmd=${1:-usage} ; shift
 case "${cmd}" in
     build-library)
         CONTAINERS=(alpine-latest-stable openssh-base maven nginx postgres redis redis-backup asciidocserver)
         for cnt in "${CONTAINERS[@]}"
         do
-            echo -n "* Checking container ${cnt}"
+            echo -n "* Checking image ${cnt}"
             if [[ $(docker image ls | grep "${cnt}" | grep -c "${VERSION}") = 0 ]]
             then
                 echo "... building"
                 build_library "${cnt}"
             else
-                echo "... image already built"
+                echo "... already built"
             fi
         done
     ;;
@@ -98,11 +118,6 @@ case "${cmd}" in
         echo "*"
         echo ""
         docker_compose_build cicd
-        echo "* done"
-        echo "*"
-        echo "* Building endpoint"
-        echo "*"
-        "${execdir}"/endpoint.sh build
         echo "* done"
     ;;
     build-pm)
@@ -115,7 +130,7 @@ case "${cmd}" in
             --build-arg "VERSION=${VERSION}" \
             --build-arg "TRAC_PROJECT=${TRAC_PROJECT}" \
             --build-arg "TRAC_VERSION=${TRAC_VERSION}" \
-            -t "${PREFIX}/trac:${VERSION}" \
+            -t "${CONTAINER_PREFIX}/trac:${VERSION}" \
             PM/trac
         echo "* done"
         echo ""
@@ -127,32 +142,113 @@ case "${cmd}" in
         echo "* done"
     ;;
     build-all)
-
-    ;;
-    local)
-        echo ""
-        echo "*"
-        echo "* Building Reverse Proxy"
-        echo "*"
-        echo ""
-        docker build \
-            --build-arg "VERSION=${VERSION}" \
-            -t "${PREFIX}/rproxy:${VERSION}" \
-            rproxy
-        echo "* done"
+        $0 build-library
+        $0 build-pm
+        $0 build-cicd
     ;;
     init)
         $0 stop
-        $0 start
-        echo "* done"
+        $0 build-all
+        if [[ "${MIKROKOSMOS_DOMAIN}" == "local" ]]
+        then
+            echo ""
+            echo "*"
+            echo "* Building local reverse proxy"
+            echo "*"
+            echo ""
+            docker build \
+                --build-arg "VERSION=${VERSION}" \
+                -t "${CONTAINER_PREFIX}/local:${VERSION}" \
+                local
+            echo "* done"
+            docker-compose \
+                -p "${CONTAINER_PREFIX}" \
+                ${COMPOSE_FILES} \
+                build \
+                --build-arg "VERSION=${VERSION}" \
+                --build-arg "TRAC_PROJECT=${TRAC_PROJECT}"
+            echo "* done"
+        else
+            echo ""
+            echo "* Initializing endpoint"
+            echo ""
+            "${execdir}"/endpoint.sh init
+            echo ""
+            echo "***************************************************"
+            echo "*"
+            echo "* You may run $0 letsencrypt to issue Let's Encrypt"
+            echo "* TLS certificates."
+            echo "*"
+            echo "***************************************************"
+        fi
+    ;;
+    letsencrypt)
+        if [[ ${MIKROKOSMOS_DOMAIN} == "local" ]]
+        then
+            echo "Cannot generate TLS certificates for domain .local"
+            exit 1
+        fi
+        if docker_container_running mikrokosmos_trac-myproject_1
+        then
+            certbot run \
+                -n \
+                --nginx \
+                --agree-tos --no-eff-email \
+                --redirect \
+                -m "support@${MIKROKOSMOS_DOMAIN}" -d "trac.${MIKROKOSMOS_DOMAIN}"
+        fi
+        if docker_container_running mikrokosmos_redmine_1
+        then
+            certbot run \
+                -n \
+                --nginx \
+                --agree-tos --no-eff-email \
+                --redirect \
+                -m "support@${MIKROKOSMOS_DOMAIN}" -d "redmine.${MIKROKOSMOS_DOMAIN}"
+        fi
+        if docker_container_running mikrokosmos_sonarqube_1
+        then
+            certbot run \
+                -n \
+                --nginx \
+                --agree-tos --no-eff-email \
+                --redirect \
+                -m "support@${MIKROKOSMOS_DOMAIN}" -d "sonarqube.${MIKROKOSMOS_DOMAIN}"
+        fi
+        if docker_container_running mikrokosmos_nexus_1
+        then
+            certbot run \
+                -n \
+                --nginx \
+                --agree-tos --no-eff-email \
+                --redirect \
+                -m "support@${MIKROKOSMOS_DOMAIN}" -d "nexus.${MIKROKOSMOS_DOMAIN}"
+        fi
+    ;;
+    ps)
+        docker-compose \
+            -p ${CONTAINER_PREFIX} \
+            ${COMPOSE_FILES} \
+            ps
+    ;;
+    logs)
+        docker logs "${CONTAINER_PREFIX}_$1_1"
+    ;;
+    start)
         echo ""
-        echo "* Waiting 30 seconds to give systems a chance to initialize"
+        echo "*"
+        echo "* Running Project Management, CI/CD environment"
+        echo "*"
         echo ""
-        sleep 30
+        docker-compose \
+            -p ${CONTAINER_PREFIX} \
+            ${COMPOSE_FILES} \
+            up -d
         echo ""
-        echo "* Initializing and running endpoint"
+        secs=60
+        echo "* Waiting ${secs} seconds to give systems a chance to initialize"
         echo ""
-        "${execdir}"/endpoint.sh init
+        sleep ${secs}
         echo ""
         echo "**************************************************"
         echo "*"
@@ -181,82 +277,37 @@ case "${cmd}" in
         then
             NEXUS_PWD=$(docker exec mikrokosmos_nexus_1 \
                 cat /nexus-data/admin.password)
-            echo "*     http://repo.local (${NEXUS_PWD:-})"
+            echo "*     http://nexus.local (${NEXUS_PWD:-})"
         fi
-        echo "*     http://quality.local"
+        echo "*     http://sonarqube.local"
         echo "*"
         echo "**************************************************"
         echo ""
     ;;
-    letsencrypt)
-        if docker_container_running mikrokosmos_trac-myproject_1
-        then
-            certbot run \
-                -n \
-                --nginx \
-                --agree-tos --no-eff-email \
-                --redirect \
-                -m "support@${domain}" -d "trac.${domain}"
-        fi
-        if docker_container_running mikrokosmos_redmine_1
-        then
-            certbot run \
-                -n \
-                --nginx \
-                --agree-tos --no-eff-email \
-                --redirect \
-                -m "support@${domain}" -d "redmine.${domain}"
-        fi
-        if docker_container_running mikrokosmos_sonarqube_1
-        then
-            certbot run \
-                -n \
-                --nginx \
-                --agree-tos --no-eff-email \
-                --redirect \
-                -m "support@${domain}" -d "sonarqube.${domain}"
-        fi
-        if docker_container_running mikrokosmos_repo_1
-        then
-            certbot run \
-                -n \
-                --nginx \
-                --agree-tos --no-eff-email \
-                --redirect \
-                -m "support@${domain}" -d "repo.${domain}"
-        fi
-    ;;
-    ps)
-        #-f docker-compose.yml \
-        docker-compose \
-            -p ${PREFIX} \
-            -f docker-compose.pm.yml \
-            -f docker-compose.cicd.yml \
-            ps
-    ;;
-    start)
-        echo ""
-        echo "*"
-        echo "* Running Project Management, CI/CD environment"
-        echo "*"
-        echo ""
-        #-f docker-compose.yml \
-        docker-compose \
-            -p ${PREFIX} \
-            -f docker-compose.pm.yml \
-            -f docker-compose.cicd.yml \
-            up -d
-    ;;
     stop)
-        #-f docker-compose.yml \
         docker-compose \
-            -p ${PREFIX} \
-            -f docker-compose.pm.yml \
-            -f docker-compose.cicd.yml \
+            -p ${CONTAINER_PREFIX} \
+            ${COMPOSE_FILES} \
             stop
     ;;
+    up)
+        docker-compose \
+            -p ${CONTAINER_PREFIX} \
+            ${COMPOSE_FILES} \
+            up -d
+    ;;
+    down)
+        docker-compose \
+            -p ${CONTAINER_PREFIX} \
+            ${COMPOSE_FILES} \
+            down
+    ;;
     *)
-        echo "usage: $0 <build-library | build-template | build | init | start | stop>"
+        echo "usage: $0 <build-library | build-template | build-all>"
+        echo "usage: $0 <init>"
+        echo "usage: $0 <letsencrypt>"
+        echo "usage: $0 <up | down>"
+        echo "usage: $0 <start | stop>"
         exit 1
     ;;
 esac
