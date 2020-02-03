@@ -11,7 +11,7 @@ fi
 
 TAG=$1
 
-git tag -d "${TAG}"
+git tag -d "${TAG}" || echo "Tag does not exist"
 git push origin :refs/tags/"${TAG}"
 git tag -f "${TAG}"
 git push --tags origin HEAD
