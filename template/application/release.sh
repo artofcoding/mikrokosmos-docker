@@ -77,10 +77,10 @@ done_or_failed $?
 if [[ $(git --no-pager tag -l | grep -c "${TAG}") -gt 0 ]]
 then
     echo "Tag ${TAG} already exists"
-    echo -n "Removing local ${TAG}..."
+    echo -n "Removing local tag ${TAG}..."
     git tag -d "${TAG}"
     done_or_failed $?
-    echo -n "Removing remote ${TAG}..."
+    echo -n "Removing tag ${TAG} at remote..."
     git push :refs/tags/"${TAG}"
     done_or_failed $?
 fi
