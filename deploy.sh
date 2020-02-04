@@ -49,7 +49,7 @@ fi
 
 if [[ ${MIKROKOSMOS_DOMAIN} == "local" ]]
 then
-    COMPOSE_FILES="-f docker-compose.pm.yml -f docker-compose.cicd.yml -f docker-compose.local.yml"
+    COMPOSE_FILES="-f docker-compose.pm.yml -f docker-compose.cicd.yml -f docker-compose.local-rproxy.yml"
 else
     COMPOSE_FILES="-f docker-compose.pm.yml -f docker-compose.cicd.yml"
 fi
@@ -158,8 +158,8 @@ case "${cmd}" in
             echo ""
             docker build \
                 --build-arg "VERSION=${VERSION}" \
-                -t "${CONTAINER_PREFIX}/local:${VERSION}" \
-                local
+                -t "${CONTAINER_PREFIX}/local-rproxy:${VERSION}" \
+                local-rproxy
             echo "* done"
             docker-compose \
                 -p "${CONTAINER_PREFIX}" \
