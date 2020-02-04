@@ -1,5 +1,5 @@
 ARG VERSION
-FROM postgres:12.1-alpine AS base
+FROM mikrokosmos/postgres:${VERSION} AS base
 
 LABEL maintainer="Ralf Bensmann <ralf@art-of-coding.eu>"
 LABEL vendor="Art of Coding UG"
