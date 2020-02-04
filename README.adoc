@@ -39,13 +39,14 @@ NOTE: To setup Mikrokosmos for local usage see <<local-usage,below>>.
 curl https://raw.githubusercontent.com/rbe/mikrokosmos-docker/master/bin/setup-archlinux.sh | bash
 ----
 
-The script automatically checks out a release and builds Mikrokosmos project management an CI/CD environment:
+The script automatically checks out a release (tagged with vN.n.n) and
+builds Mikrokosmos project management an CI/CD environment:
 
 [source,bash]
 ----
 git clone \
     --depth 1 \
-    --branch v1.0 \
+    --branch v1.1.0 \
     https://github.com/rbe/mikrokosmos-docker.git
 ----
 
@@ -59,18 +60,25 @@ MIKROKOSMOS_DOMAIN=example.com ./deploy.sh init
 .Container Images
 [source,text]
 ----
-REPOSITORY                        TAG  IMAGE ID   CREATED     SIZE
-mikrokosmos/nexus3                1.0  e3f8dd42e  1 hour ago  635MB
-mikrokosmos/sonarqube             1.0  68b8dc59e  1 hour ago  483MB
-mikrokosmos/sonarqube-db          1.0  b6034d718  1 hour ago  146MB
-mikrokosmos/trac-myproject        1.0  c8360192a  1 hour ago  312MB
-mikrokosmos/rproxy                1.0  6ac7f8d9f  1 hour ago  23.1MB
-mikrokosmos/redmine               1.0  4c77c7787  1 hour ago  505MB
-mikrokosmos/redmine-db            1.0  8c8c2a02d  1 hour ago  146MB
-mikrokosmos/trac-db               1.0  5fa7da7fd  1 hour ago  146MB
-mikrokosmos/trac                  1.0  4dfb6687d  1 hour ago  312MB
-mikrokosmos/postgres              1.0  e680524bd  1 hour ago  146MB
-mikrokosmos/alpine-latest-stable  1.0  ceef70871  1 hour ago  11.7MB
+REPOSITORY                        TAG    IMAGE ID   CREATED     SIZE
+mikrokosmos/nexus3                1.1.0  e3f8dd42e  1 hour ago  635MB
+mikrokosmos/sonarqube             1.1.0  68b8dc59e  1 hour ago  483MB
+mikrokosmos/sonarqube-db          1.1.0  b6034d718  1 hour ago  146MB
+mikrokosmos/trac-myproject        1.1.0  c8360192a  1 hour ago  312MB
+mikrokosmos/rproxy                1.1.0  6ac7f8d9f  1 hour ago  23.1MB
+mikrokosmos/redmine               1.1.0  4c77c7787  1 hour ago  505MB
+mikrokosmos/redmine-db            1.1.0  8c8c2a02d  1 hour ago  146MB
+mikrokosmos/trac-db               1.1.0  5fa7da7fd  1 hour ago  146MB
+mikrokosmos/trac                  1.1.0  4dfb6687d  1 hour ago  312MB
+mikrokosmos/postgres              1.1.0  e680524bd  1 hour ago  146MB
+mikrokosmos/alpine-latest-stable  1.1.0  ceef70871  1 hour ago  11.7MB
+----
+
+.Start Mikrokosmos Containers
+[source,bash]
+----
+cd mikrokosmos-docker
+./deploy.sh start
 ----
 
 .deploy.sh ps
@@ -78,12 +86,12 @@ mikrokosmos/alpine-latest-stable  1.0  ceef70871  1 hour ago  11.7MB
 ----
             Name                   Command          State   Ports
 ----------------------------------------------------------------------------------
-mikrokosmos_nexus_1           sh -c ${SONATYP ...   Up      0.0.0.0:8081->8081/tcp
+mikrokosmos_nexus_1           sh -c ${SONATYP ...   Up      8081->8081/tcp
 mikrokosmos_redmine-db_1      /usr/local/bin/ ...   Up      5432/tcp
 mikrokosmos_redmine_1         /docker-entrypo ...   Up      3000/tcp
 mikrokosmos_rproxy_1          nginx                 Up      0.0.0.0:80->80/tcp
 mikrokosmos_sonarqube-db_1    docker-entrypoi ...   Up      5432/tcp
-mikrokosmos_sonarqube_1       ./bin/run.sh          Up      0.0.0.0:9000->9000/tcp
+mikrokosmos_sonarqube_1       ./bin/run.sh          Up      9000->9000/tcp
 mikrokosmos_trac-db_1         docker-entrypoi ...   Up      5432/tcp
 mikrokosmos_trac-myproject_1  /trac.sh              Up      8000/tcp
 ----
@@ -108,7 +116,7 @@ Add one or more of the following entries to your local host name file, depending
 | Redmine
 | redmine.local
 
-| Sonatype Nexus
+| Sonatype Nexus3
 | nexus.local
 
 | SonarQube
@@ -141,6 +149,13 @@ On macOS please add local hostname too.
 ----
 cd mikrokosmos-docker
 ./deploy.sh init
+----
+
+.Start Mikrokosmos Containers
+[source,bash]
+----
+cd mikrokosmos-docker
+./deploy.sh start
 ----
 
 ==== Sonatype Nexus3
@@ -318,6 +333,15 @@ Access through http://nexus.local/docker/
 | http://redmine.local
 | Activate REST API under Aministration -> Configuration -> API
 |====
+
+=== Removing Mikrokosmos Images
+
+You can remove a certain release of container images by
+
+[source,bash]
+----
+docker image rm $(docker image ls -q --filter 'reference=mikrokosmos/*:1.1.0')
+----
 
 ==== Resources
 
