@@ -18,7 +18,7 @@ fi
 # Time
 #
 
-[ ! -f /etc/localtime ] && cp /usr/share/zoneinfo/Europe/Berlin /etc/localtime
+[[ ! -f /etc/localtime ]] && cp /usr/share/zoneinfo/Europe/Berlin /etc/localtime
 echo "Europe/Berlin" >/etc/timezone
 #echo "LANG=de_DE.UTF-8" >/etc/locale.conf
 echo "LANG=en_US.UTF-8" >/etc/locale.conf
@@ -47,8 +47,8 @@ set +o errexit
 ssh-keygen -R github.com
 ssh-keygen -R bitbucket.org
 set -o errexit
-ssh-keyscan github.com >>${HOME}/.ssh/known_hosts
-ssh-keyscan bitbucket.org >>${HOME}/.ssh/known_hosts
+ssh-keyscan github.com >>"${HOME}/.ssh/known_hosts"
+ssh-keyscan bitbucket.org >>"${HOME}/.ssh/known_hosts"
 
 #
 # Docker
@@ -56,6 +56,7 @@ ssh-keyscan bitbucket.org >>${HOME}/.ssh/known_hosts
 
 # Install Docker
 pacman --noconfirm -S docker docker-compose
+
 # Docker Logfiles
 pacman --noconfirm -S logrotate
 logrotate_docker=/etc/logrotate.d/docker
@@ -83,7 +84,7 @@ usermod -s /bin/zsh root
 # Mikrokosmos Docker
 #
 
-MIKROKOSMOS_VERSION=v1.0
+MIKROKOSMOS_VERSION=v1.1.0
 
 # Docker and SonarQube / Elasticsearch
 cat >>/etc/sysctl.d/99-sysctl.conf <<EOF
@@ -91,29 +92,28 @@ vm.max_map_count=262144
 EOF
 sysctl --system
 
-# Shallow clone Mikrokosmos Docker
-#git config set advice.detachedHead false
-if [ ! -d mikrokosmos-docker ]
+if [[ ! -d mikrokosmos-docker ]]
 then
+    # Shallow clone Mikrokosmos Docker
+    #git config set advice.detachedHead false
     git clone \
         --depth 1 \
-        --branch ${MIKROKOSMOS_VERSION} \
-        https://github.com/artofcoding/mikrokosmos-docker.git
+        --branch "${MIKROKOSMOS_VERSION}" \
+        https://github.com/rbe/mikrokosmos-docker.git
 else
     pushd mikrokosmos-docker >/dev/null
-    ./deploy.sh stop
     git reset --hard
-    git pull
+    git pull origin "${MIKROKOSMOS_VERSION}"
     popd >/dev/null
 fi
 pushd mikrokosmos-docker >/dev/null
+find . -type f -print0 | xargs -r -0 chmod 444
+find . -type d -print0 | xargs -r -0 chmod 555
 echo ""
 echo "* Please initialize or start Mikrokosmos Container yourself, depending on your needs."
 echo "* Set environment variable MIKROKOSMOS_DOMAIN to your domain, e.g. 'example.com'"
-echo "* Go to $(pwd) and e.g."
-echo "*     ./deploy.sh init"
-echo "* or"
-echo "*     ./deploy.sh start"
+echo "* Go to $(pwd) and use deploy.sh"
+./deploy.sh
 echo ""
 popd >/dev/null
 
