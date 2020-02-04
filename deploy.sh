@@ -117,6 +117,7 @@ case "${cmd}" in
         echo "* Building CICD"
         echo "*"
         echo ""
+        # TODO Build needed container library
         docker_compose_build cicd
         echo "* done"
     ;;
@@ -126,6 +127,7 @@ case "${cmd}" in
         echo "* Building PM -- trac"
         echo "*"
         echo ""
+        # TODO Build needed container library
         docker build \
             --build-arg "VERSION=${VERSION}" \
             --build-arg "TRAC_PROJECT=${TRAC_PROJECT}" \
