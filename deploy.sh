@@ -71,16 +71,16 @@ function build_library() {
 function build_needed() {
     for cnt in alpine-latest-stable maven nginx postgres
     do
-        if [[ $(docker image ls | grep -c "mikrokosmos/${cnt}:${VERSION}") == 0 ]]
+        if [[ $(${container} image ls | grep -c "mikrokosmos/${cnt}:${VERSION}") == 0 ]]
         then
             build_library "${cnt}"
         fi
     done
 }
 
-function docker_compose_build() {
+function container_compose_build() {
     local prj=$1
-    docker-compose \
+    ${container}-compose \
         -p "${CONTAINER_PREFIX}" \
         -f "docker-compose.${prj}.yml" \
         build \
@@ -88,9 +88,9 @@ function docker_compose_build() {
         --build-arg "TRAC_PROJECT=${TRAC_PROJECT}"
 }
 
-function docker_container_running() {
+function container_running() {
     local cnt=$1
-    [[ "$(docker inspect \
+    [[ "$(${container} inspect \
               -f '{{.State.Running}}' \
               "${cnt}" 2>/dev/null)" == "true" ]] && return 0 || return 1
 }
@@ -101,8 +101,9 @@ case "${cmd}" in
         CONTAINERS=(alpine-latest-stable openssh-base maven nginx postgres redis redis-backup asciidocserver)
         for cnt in "${CONTAINERS[@]}"
         do
+            echo ""
             echo -n "* Checking image ${cnt}"
-            if [[ $(docker image ls | grep "${cnt}" | grep -c "${VERSION}") = 0 ]]
+            if [[ $(${container} image ls | grep "${cnt}" | grep -c "${VERSION}") = 0 ]]
             then
                 echo "... building"
                 build_library "${cnt}"
@@ -118,7 +119,7 @@ case "${cmd}" in
         echo "*"
         echo ""
         # TODO Build needed container library
-        docker_compose_build cicd
+        container_compose_build cicd
         echo "* done"
     ;;
     build-pm)
@@ -128,7 +129,7 @@ case "${cmd}" in
         echo "*"
         echo ""
         # TODO Build needed container library
-        docker build \
+        ${container} build \
             --build-arg "VERSION=${VERSION}" \
             --build-arg "TRAC_PROJECT=${TRAC_PROJECT}" \
             --build-arg "TRAC_VERSION=${TRAC_VERSION}" \
@@ -140,7 +141,7 @@ case "${cmd}" in
         echo "* Building PM"
         echo "*"
         echo ""
-        docker_compose_build pm
+        container_compose_build pm
         echo "* done"
     ;;
     build-all)
@@ -158,12 +159,12 @@ case "${cmd}" in
             echo "* Building local reverse proxy"
             echo "*"
             echo ""
-            docker build \
+            ${container} build \
                 --build-arg "VERSION=${VERSION}" \
                 -t "${CONTAINER_PREFIX}/local-rproxy:${VERSION}" \
                 local-rproxy
             echo "* done"
-            docker-compose \
+            ${container}-compose \
                 -p "${CONTAINER_PREFIX}" \
                 ${COMPOSE_FILES} \
                 build \
@@ -190,7 +191,7 @@ case "${cmd}" in
             echo "Cannot generate TLS certificates for domain .local"
             exit 1
         fi
-        if docker_container_running mikrokosmos_trac-myproject_1
+        if container_running mikrokosmos_trac-myproject_1
         then
             certbot run \
                 -n \
@@ -199,7 +200,7 @@ case "${cmd}" in
                 --redirect \
                 -m "support@${MIKROKOSMOS_DOMAIN}" -d "trac.${MIKROKOSMOS_DOMAIN}"
         fi
-        if docker_container_running mikrokosmos_redmine_1
+        if container_running mikrokosmos_redmine_1
         then
             certbot run \
                 -n \
@@ -208,7 +209,7 @@ case "${cmd}" in
                 --redirect \
                 -m "support@${MIKROKOSMOS_DOMAIN}" -d "redmine.${MIKROKOSMOS_DOMAIN}"
         fi
-        if docker_container_running mikrokosmos_sonarqube_1
+        if container_running mikrokosmos_sonarqube_1
         then
             certbot run \
                 -n \
@@ -217,7 +218,7 @@ case "${cmd}" in
                 --redirect \
                 -m "support@${MIKROKOSMOS_DOMAIN}" -d "sonarqube.${MIKROKOSMOS_DOMAIN}"
         fi
-        if docker_container_running mikrokosmos_nexus_1
+        if container_running mikrokosmos_nexus_1
         then
             certbot run \
                 -n \
@@ -228,7 +229,7 @@ case "${cmd}" in
         fi
     ;;
     ps)
-        docker-compose \
+        ${container}-compose \
             -p ${CONTAINER_PREFIX} \
             ${COMPOSE_FILES} \
             ps
@@ -242,7 +243,7 @@ case "${cmd}" in
         echo "* Running Project Management, CI/CD environment"
         echo "*"
         echo ""
-        docker-compose \
+        ${container}-compose \
             -p ${CONTAINER_PREFIX} \
             ${COMPOSE_FILES} \
             up -d
@@ -259,25 +260,25 @@ case "${cmd}" in
         echo "*"
         echo "* Point your browser to"
         echo "*"
-        #if docker_container_running mikrokosmos_youtrack_1
+        #if container_running mikrokosmos_youtrack_1
         #then
         #    YOUTRACK_PWD=$(docker exec \
         #        mikrokosmos_youtrack_1 \
         #        cat /opt/youtrack/conf/internal/services/configurationWizard/wizard_token.txt)
         #    echo "*     http://youtrack.local (${YOUTRACK_PWD:-})"
         #fi
-        if docker_container_running mikrokosmos_trac-myproject_1
+        if container_running mikrokosmos_trac-myproject_1
         then
-            TRAC_PWD=$(docker logs mikrokosmos_trac-myproject_1 2>&1 \
+            TRAC_PWD=$(${container} logs mikrokosmos_trac-myproject_1 2>&1 \
                 | grep "Password is" \
                 | awk -F':' '{print $2}' \
                 | tr -d ' ')
             echo "*     http://trac.local (${TRAC_PWD:-})"
         fi
         echo "*     http://redmine.local"
-        if docker_container_running mikrokosmos_repo_1
+        if container_running mikrokosmos_repo_1
         then
-            NEXUS_PWD=$(docker exec mikrokosmos_nexus_1 \
+            NEXUS_PWD=$(${container} exec mikrokosmos_nexus_1 \
                 cat /nexus-data/admin.password)
             echo "*     http://nexus.local (${NEXUS_PWD:-})"
         fi
@@ -287,19 +288,19 @@ case "${cmd}" in
         echo ""
     ;;
     stop)
-        docker-compose \
+        ${container}-compose \
             -p ${CONTAINER_PREFIX} \
             ${COMPOSE_FILES} \
             stop
     ;;
     up)
-        docker-compose \
+        ${container}-compose \
             -p ${CONTAINER_PREFIX} \
             ${COMPOSE_FILES} \
             up -d
     ;;
     down)
-        docker-compose \
+        ${container}-compose \
             -p ${CONTAINER_PREFIX} \
             ${COMPOSE_FILES} \
             down

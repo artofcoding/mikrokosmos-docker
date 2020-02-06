@@ -5,6 +5,9 @@
 # All rights reserved. Use is subject to license terms.
 #
 
+MIKROKOSMOS_VERSION=1.1.0
+CONTAINER_SOLUTION="podman"
+
 set -o nounset
 set -o errexit
 
@@ -29,13 +32,15 @@ echo "LANG=en_US.UTF-8" >/etc/locale.conf
 
 pacman --noconfirm -Syyu
 
+#archlinux_install linux-lts
+#grub-mkconfig -o /boot/grub/grub.cfg
+
 pacman --noconfirm -S qemu-guest-agent
 systemctl enable qemu-ga
 systemctl start qemu-ga
 
 pacman --noconfirm -S sudo
-#archlinux_install linux-lts
-#grub-mkconfig -o /boot/grub/grub.cfg
+pacman --noconfirm -S logrotate
 pacman --noconfirm -S git
 
 #
@@ -55,16 +60,18 @@ ssh-keyscan github.com >>"${HOME}/.ssh/known_hosts"
 ssh-keyscan bitbucket.org >>"${HOME}/.ssh/known_hosts"
 
 #
-# Docker
+# Container
 #
 
-# Install Docker
-pacman --noconfirm -S docker docker-compose
-
-# Docker Logfiles
-pacman --noconfirm -S logrotate
-logrotate_docker=/etc/logrotate.d/docker
-cat >${logrotate_docker} <<EOF
+case "${CONTAINER_SOLUTION}" in
+    podman)
+        pacman --noconfirm python python-pip
+        pip install podman-compose
+    ;;
+    docker)
+        pacman --noconfirm -S docker docker-compose
+        logrotate_docker=/etc/logrotate.d/docker
+        cat >${logrotate_docker} <<EOF
 /var/lib/docker/containers/*/*.log {
         rotate 30
         daily
@@ -74,8 +81,10 @@ cat >${logrotate_docker} <<EOF
         copytruncate
 }
 EOF
-systemctl enable docker
-systemctl start docker
+        systemctl enable docker
+        systemctl start docker
+    ;;
+esac
 
 #
 # ZSH
@@ -85,10 +94,8 @@ pacman --noconfirm -S zsh
 usermod -s /bin/zsh root
 
 #
-# Mikrokosmos Docker
+# Mikrokosmos Container
 #
-
-MIKROKOSMOS_VERSION=v1.1.0
 
 SYSCTL_CONF="/etc/sysctl.d/99-sysctl.conf"
 # Docker and SonarQube / Elasticsearch
@@ -111,7 +118,7 @@ then
 else
     pushd mikrokosmos-docker >/dev/null
     git reset --hard
-    git pull origin "${MIKROKOSMOS_VERSION}"
+    git pull origin "v${MIKROKOSMOS_VERSION}"
     popd >/dev/null
 fi
 pushd mikrokosmos-docker >/dev/null

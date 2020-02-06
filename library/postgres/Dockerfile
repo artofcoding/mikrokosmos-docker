@@ -8,7 +8,7 @@ FROM base
 ENV TZ Europe/Berlin
 ENV LANG en_US.UTF-8
 
-COPY --from=base /usr/local/bin/docker-entrypoint.sh /usr/local/bin
+COPY --from=postgres:12.1-alpine /usr/local/bin/docker-entrypoint.sh /usr/local/bin
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 
 COPY --chown=postgres:postgres *.sh /
