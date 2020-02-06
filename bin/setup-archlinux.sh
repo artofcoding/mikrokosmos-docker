@@ -29,6 +29,10 @@ echo "LANG=en_US.UTF-8" >/etc/locale.conf
 
 pacman --noconfirm -Syyu
 
+pacman --noconfirm -S qemu-guest-agent
+systemctl enable qemu-ga
+systemctl start qemu-ga
+
 pacman --noconfirm -S sudo
 #archlinux_install linux-lts
 #grub-mkconfig -o /boot/grub/grub.cfg
