@@ -14,6 +14,12 @@ MIKROKOSMOS_DOMAIN=${MIKROKOSMOS_DOMAIN:-local}
 set -o nounset
 set -o errexit
 
+if [[ -z "${MIKROKOSMOS_DOMAIN}" ]]
+then
+    echo "MIKROKOSMOS_DOMAIN is not set"
+    exit 1
+fi
+
 CONTAINER_PREFIX=mikrokosmos
 TRAC_PROJECT=MyProject
 TRAC_VERSION=1.2.5
@@ -150,7 +156,7 @@ case "${cmd}" in
         $0 build-cicd
     ;;
     init)
-        $0 stop
+        $0 down
         $0 build-all
         if [[ "${MIKROKOSMOS_DOMAIN}" == "local" ]]
         then
@@ -175,7 +181,7 @@ case "${cmd}" in
             echo ""
             echo "* Initializing endpoint"
             echo ""
-            "${execdir}"/endpoint.sh init
+            "${execdir}"/endpoint.sh init "${MIKROKOSMOS_DOMAIN}"
             echo ""
             echo "***************************************************"
             echo "*"
@@ -184,6 +190,51 @@ case "${cmd}" in
             echo "*"
             echo "***************************************************"
         fi
+        echo ""
+        echo "*"
+        echo "* Running Project Management, CI/CD environment"
+        echo "*"
+        echo ""
+        $0 up -d
+        echo ""
+        secs=60
+        echo "* Waiting ${secs} seconds to give systems a chance to initialize"
+        echo ""
+        sleep ${secs}
+        echo ""
+        echo "**************************************************"
+        echo "*"
+        echo "* Please adjust your host resolution (/etc/hosts)."
+        echo "* See README.adoc."
+        echo "*"
+        echo "* Point your browser to"
+        echo "*"
+        #if container_running mikrokosmos_youtrack_1
+        #then
+        #    YOUTRACK_PWD=$(docker exec \
+        #        mikrokosmos_youtrack_1 \
+        #        cat /opt/youtrack/conf/internal/services/configurationWizard/wizard_token.txt)
+        #    echo "*     http://youtrack.local (${YOUTRACK_PWD:-})"
+        #fi
+        if container_running mikrokosmos_trac-myproject_1
+        then
+            TRAC_PWD=$(${container} logs mikrokosmos_trac-myproject_1 2>&1 \
+                | grep "Password is" \
+                | awk -F':' '{print $2}' \
+                | tr -d ' ')
+            echo "*     http://trac.local (${TRAC_PWD:-})"
+        fi
+        echo "*     http://redmine.local"
+        if container_running mikrokosmos_repo_1
+        then
+            NEXUS_PWD=$(${container} exec mikrokosmos_nexus_1 \
+                cat /nexus-data/admin.password)
+            echo "*     http://nexus.local (${NEXUS_PWD:-})"
+        fi
+        echo "*     http://sonarqube.local"
+        echo "*"
+        echo "**************************************************"
+        echo ""
     ;;
     letsencrypt)
         if [[ ${MIKROKOSMOS_DOMAIN} == "local" ]]
@@ -237,62 +288,6 @@ case "${cmd}" in
     logs)
         docker logs "${CONTAINER_PREFIX}_$1_1"
     ;;
-    start)
-        echo ""
-        echo "*"
-        echo "* Running Project Management, CI/CD environment"
-        echo "*"
-        echo ""
-        ${container}-compose \
-            -p ${CONTAINER_PREFIX} \
-            ${COMPOSE_FILES} \
-            up -d
-        echo ""
-        secs=60
-        echo "* Waiting ${secs} seconds to give systems a chance to initialize"
-        echo ""
-        sleep ${secs}
-        echo ""
-        echo "**************************************************"
-        echo "*"
-        echo "* Please adjust your host resolution (/etc/hosts)."
-        echo "* See README.adoc."
-        echo "*"
-        echo "* Point your browser to"
-        echo "*"
-        #if container_running mikrokosmos_youtrack_1
-        #then
-        #    YOUTRACK_PWD=$(docker exec \
-        #        mikrokosmos_youtrack_1 \
-        #        cat /opt/youtrack/conf/internal/services/configurationWizard/wizard_token.txt)
-        #    echo "*     http://youtrack.local (${YOUTRACK_PWD:-})"
-        #fi
-        if container_running mikrokosmos_trac-myproject_1
-        then
-            TRAC_PWD=$(${container} logs mikrokosmos_trac-myproject_1 2>&1 \
-                | grep "Password is" \
-                | awk -F':' '{print $2}' \
-                | tr -d ' ')
-            echo "*     http://trac.local (${TRAC_PWD:-})"
-        fi
-        echo "*     http://redmine.local"
-        if container_running mikrokosmos_repo_1
-        then
-            NEXUS_PWD=$(${container} exec mikrokosmos_nexus_1 \
-                cat /nexus-data/admin.password)
-            echo "*     http://nexus.local (${NEXUS_PWD:-})"
-        fi
-        echo "*     http://sonarqube.local"
-        echo "*"
-        echo "**************************************************"
-        echo ""
-    ;;
-    stop)
-        ${container}-compose \
-            -p ${CONTAINER_PREFIX} \
-            ${COMPOSE_FILES} \
-            stop
-    ;;
     up)
         ${container}-compose \
             -p ${CONTAINER_PREFIX} \
@@ -305,12 +300,24 @@ case "${cmd}" in
             ${COMPOSE_FILES} \
             down
     ;;
+    start)
+        ${container}-compose \
+            -p ${CONTAINER_PREFIX} \
+            ${COMPOSE_FILES} \
+            start "$@"
+    ;;
+    stop)
+        ${container}-compose \
+            -p ${CONTAINER_PREFIX} \
+            ${COMPOSE_FILES} \
+            stop "$@"
+    ;;
     *)
         echo "usage: $0 <build-library | build-template | build-all>"
         echo "usage: $0 <init>"
         echo "usage: $0 <letsencrypt>"
         echo "usage: $0 <up | down>"
-        echo "usage: $0 <start | stop>"
+        echo "usage: $0 <start | stop> <service1> [<serviceN> ...]"
         exit 1
     ;;
 esac
