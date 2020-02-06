@@ -41,8 +41,8 @@ services:
       - rproxy_etc_letsencrypt:/etc/letsencrypt:ro
       - rproxy_html:/usr/share/nginx/html:ro
     networks:
-      - pm
-      - cicd
+      - mikrokosmos_pm
+      - mikrokosmos_cicd
       - development-backend
       - test-backend
       - qa-backend
@@ -87,11 +87,11 @@ networks:
     driver: bridge
     external: false
     internal: false
-  pm:
+  mikrokosmos_pm:
     driver: bridge
     internal: true
     external: true
-  cicd:
+  mikrokosmos_cicd:
     driver: bridge
     internal: true
     external: true
