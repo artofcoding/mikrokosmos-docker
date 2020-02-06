@@ -78,7 +78,7 @@ if [[ $(git --no-pager tag -l | grep -c "${TAG}") -gt 0 ]]
 then
     echo "Tag ${TAG} already exists"
     echo -n "Removing local tag ${TAG}..."
-    git tag -d "${TAG}" || echo "Tag ${TAG} does not exist"
+    git tag -d "${TAG}" || echo " ${TAG} does not exist,"
     done_or_failed $?
     echo -n "Removing tag ${TAG} at remote..."
     git push origin :refs/tags/"${TAG}"
