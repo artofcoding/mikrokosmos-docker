@@ -6,7 +6,7 @@
 #
 
 MIKROKOSMOS_VERSION=1.1.0
-CONTAINER_SOLUTION="podman"
+CONTAINER_SOLUTION="docker"
 
 set -o nounset
 set -o errexit
@@ -70,8 +70,7 @@ case "${CONTAINER_SOLUTION}" in
     ;;
     docker)
         pacman --noconfirm -S docker docker-compose
-        logrotate_docker=/etc/logrotate.d/docker
-        cat >${logrotate_docker} <<EOF
+        cat >/etc/logrotate.d/docker <<EOF
 /var/lib/docker/containers/*/*.log {
         rotate 30
         daily
