@@ -6,7 +6,6 @@ LABEL vendor="Art of Coding UG"
 LABEL project="Mikrokosmos"
 
 COPY rproxy/nginx.conf /etc/nginx
-COPY rproxy/*.nginx /etc/nginx/conf.d/
 COPY rproxy/enabled/*.nginx /etc/nginx/conf.d/enabled/
 COPY rproxy/disabled/*.nginx /etc/nginx/conf.d/disabled/
 
