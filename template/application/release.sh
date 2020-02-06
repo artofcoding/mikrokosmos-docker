@@ -90,13 +90,13 @@ done_or_failed $?
 
 if [[ "${PUSH_TO_ORIGIN}" == "true" ]]
 then
-    echo -n "Pushing to origin/develop..."
+    echo "Pushing to origin/develop..."
     git push origin develop
     done_or_failed $?
-    echo -n "Pushing to origin/master..."
+    echo "Pushing to origin/master..."
     git push origin master
     done_or_failed $?
-    echo -n "Puhsing tags to origin HEAD..."
+    echo "Puhsing tags to origin HEAD..."
     git push --tags origin HEAD
     done_or_failed $?
 fi
