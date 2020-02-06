@@ -116,6 +116,7 @@ else
 fi
 pushd mikrokosmos-docker >/dev/null
 find . -type f -print0 | xargs -r -0 chmod 444
+find . -type f -name \*.sh -print0 | xargs -r -0 chmod 555
 find . -type d -print0 | xargs -r -0 chmod 555
 echo ""
 echo "* Please initialize or start Mikrokosmos Container yourself, depending on your needs."
