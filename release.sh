@@ -81,7 +81,7 @@ then
     git tag -d "${TAG}" || echo "Tag "${TAG} does not exist"
     done_or_failed $?
     echo -n "Removing tag ${TAG} at remote..."
-    git push :refs/tags/"${TAG}"
+    git push origin :refs/tags/"${TAG}"
     done_or_failed $?
 fi
 echo -n "Tagging commit ${COMMIT_SHA} as ${TAG}..."
