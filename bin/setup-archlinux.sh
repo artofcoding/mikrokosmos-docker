@@ -90,11 +90,15 @@ usermod -s /bin/zsh root
 
 MIKROKOSMOS_VERSION=v1.1.0
 
+SYSCTL_CONF="/etc/sysctl.d/99-sysctl.conf"
 # Docker and SonarQube / Elasticsearch
-cat >>/etc/sysctl.d/99-sysctl.conf <<EOF
+if [[ $(grep -c vm.max_map_count ${SYSCTL_CONF}) == 0 ]]
+then
+    cat >>${SYSCTL_CONF} <<EOF
 vm.max_map_count=262144
 EOF
-sysctl --system
+    sysctl --system
+fi
 
 if [[ ! -d mikrokosmos-docker ]]
 then
