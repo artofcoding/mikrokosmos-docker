@@ -87,11 +87,11 @@ networks:
     driver: bridge
     external: false
     internal: false
-  mikrokosmos_pm:
+  pm:
     driver: bridge
     internal: true
     external: true
-  mikrokosmos_cicd:
+  cicd:
     driver: bridge
     internal: true
     external: true
