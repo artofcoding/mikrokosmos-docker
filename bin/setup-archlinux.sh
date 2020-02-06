@@ -69,7 +69,8 @@ case "${CONTAINER_SOLUTION}" in
         pip install podman-compose
     ;;
     docker)
-        pacman --noconfirm -S docker docker-compose
+        pacman --noconfirm -S docker
+        pacman --noconfirm -S docker-compose
         cat >/etc/logrotate.d/docker <<EOF
 /var/lib/docker/containers/*/*.log {
         rotate 30
@@ -112,7 +113,7 @@ then
     #git config set advice.detachedHead false
     git clone \
         --depth 1 \
-        --branch "${MIKROKOSMOS_VERSION}" \
+        --branch "v${MIKROKOSMOS_VERSION}" \
         https://github.com/rbe/mikrokosmos-docker.git
 else
     pushd mikrokosmos-docker >/dev/null
