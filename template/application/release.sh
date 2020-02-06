@@ -71,7 +71,7 @@ then
     exit 1
 fi
 
-echo -n "Merging branch develop to master"
+echo "Merging branch develop to master"
 git push . develop:master
 done_or_failed $?
 if [[ $(git --no-pager tag -l | grep -c "${TAG}") -gt 0 ]]
