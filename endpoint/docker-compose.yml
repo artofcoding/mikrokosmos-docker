@@ -41,8 +41,8 @@ services:
       - rproxy_etc_letsencrypt:/etc/letsencrypt:ro
       - rproxy_html:/usr/share/nginx/html:ro
     networks:
-      - mikrokosmos_pm
-      - mikrokosmos_cicd
+      - pm
+      - cicd
       - development-backend
       - test-backend
       - qa-backend
