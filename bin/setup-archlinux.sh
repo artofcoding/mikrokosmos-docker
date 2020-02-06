@@ -129,7 +129,6 @@ echo ""
 echo "* Please initialize or start Mikrokosmos Container yourself, depending on your needs."
 echo "* Set environment variable MIKROKOSMOS_DOMAIN to your domain, e.g. 'example.com'"
 echo "* Go to $(pwd) and use deploy.sh"
-./deploy.sh
 echo ""
 popd >/dev/null
 
