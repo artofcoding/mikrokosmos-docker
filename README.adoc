@@ -54,7 +54,7 @@ git clone \
 [source,bash]
 ----
 cd mikrokosmos-docker
-MIKROKOSMOS_DOMAIN=example.com ./deploy.sh init
+MIKROKOSMOS_DOMAIN="example.com" ./deploy.sh init
 ----
 
 .Container Images
