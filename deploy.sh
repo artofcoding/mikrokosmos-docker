@@ -5,6 +5,7 @@
 # All rights reserved. Use is subject to license terms.
 #
 
+CONTAINER_SOLUTION="docker"
 MIKROKOSMOS_DOMAIN=${MIKROKOSMOS_DOMAIN:-local}
 
 #
@@ -39,13 +40,16 @@ export VERSION
 export CONTAINER_PREFIX
 
 # Container solution
-container=""
-if [[ -x "$(command -v podman)" ]]
+container="${CONTAINER_SOLUTION:-}"
+if [[ -z "${container}" ]]
 then
-    container="podman"
-elif [[ -x "$(command -v docker)" ]]
-then
-    container="docker"
+    if [[ -x "$(command -v podman)" ]]
+    then
+        container="podman"
+    elif [[ -x "$(command -v docker)" ]]
+    then
+        container="docker"
+    fi
 fi
 if [[ -z "${container}" ]]
 then
