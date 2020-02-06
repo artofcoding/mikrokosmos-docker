@@ -5,9 +5,7 @@
 # All rights reserved. Use is subject to license terms.
 #
 
-DOCKER_IMAGE_PREFIX=mikrokosmos
-CONTAINERS="port80 rproxy rproxy-certbot"
-#CUSTOM_DOMAIN="custom.example.org"
+CONTAINER_PREFIX=mikrokosmos
 
 set -o nounset
 set -o errexit
@@ -30,7 +28,7 @@ function show_usage() {
 
 execdir=$(pushd "$(dirname $0)" >/dev/null ; pwd ; popd >/dev/null)
 endpointdir=$(pushd "${execdir}/endpoint" >/dev/null ; pwd ; popd >/dev/null)
-certdir=$(pushd "${execdir}/certs" >/dev/null ; pwd ; popd >/dev/null)
+certdir=$(pushd "${endpointdir}/certs" >/dev/null ; pwd ; popd >/dev/null)
 
 ENV_NAME="endpoint"
 export ENV_NAME
@@ -48,7 +46,7 @@ export VERSION
 
 function endpoint_docker() {
     docker-compose \
-        -p "${ENV_NAME}" \
+        -p "${CONTAINER_PREFIX}" \
         -f "${endpointdir}"/docker-compose.yml \
         "$@"
 }
@@ -62,6 +60,7 @@ case "${mode}" in
             --compress
     ;;
     init)
+        [[ $# == 1 ]] && CUSTOM_DOMAIN=$1
         endpoint_docker up -d
         endpoint_docker start port80
         endpoint_docker start rproxy-certbot
