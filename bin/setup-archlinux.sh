@@ -65,7 +65,7 @@ ssh-keyscan bitbucket.org >>"${HOME}/.ssh/known_hosts"
 
 case "${CONTAINER_SOLUTION}" in
     podman)
-        pacman --noconfirm python python-pip
+        pacman --noconfirm -S python python-pip
         pip install podman-compose
     ;;
     docker)
