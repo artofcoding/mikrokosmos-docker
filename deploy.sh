@@ -162,6 +162,12 @@ case "${cmd}" in
     init)
         $0 down
         $0 build-all
+        echo ""
+        echo "*"
+        echo "* Running Project Management and CI/CD environment"
+        echo "*"
+        echo ""
+        $0 up
         if [[ "${MIKROKOSMOS_DOMAIN}" == "local" ]]
         then
             echo ""
@@ -183,8 +189,11 @@ case "${cmd}" in
             echo "* done"
         else
             echo ""
+            echo "*"
             echo "* Initializing endpoint"
+            echo "*"
             echo ""
+            "${execdir}"/endpoint.sh build
             "${execdir}"/endpoint.sh init "${MIKROKOSMOS_DOMAIN}"
             echo ""
             echo "***************************************************"
@@ -193,13 +202,8 @@ case "${cmd}" in
             echo "* TLS certificates."
             echo "*"
             echo "***************************************************"
+            echo ""
         fi
-        echo ""
-        echo "*"
-        echo "* Running Project Management, CI/CD environment"
-        echo "*"
-        echo ""
-        $0 up -d
         echo ""
         secs=60
         echo "* Waiting ${secs} seconds to give systems a chance to initialize"
