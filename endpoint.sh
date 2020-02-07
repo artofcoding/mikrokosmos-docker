@@ -5,7 +5,7 @@
 # All rights reserved. Use is subject to license terms.
 #
 
-CONTAINER_PREFIX=mikrokosmos
+CONTAINER_PREFIX=endpoint
 
 set -o nounset
 set -o errexit
