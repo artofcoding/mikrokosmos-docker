@@ -345,5 +345,10 @@ docker image rm $(docker image ls -q --filter 'reference=mikrokosmos/*:1.1.0')
 
 ==== Resources
 
+.Sonatype Nexus3
 * https://blog.sonatype.com/using-nexus-3-as-your-repository-part-1-maven-artifacts[Using Nexus3 as Your Repository - Part 1 Maven Artifacts]
 * https://blog.sonatype.com/using-nexus-3-as-your-repository-part-3-docker-images[Using Nexus3 as Your Repository - Part 3 Docker Images]
+
+.Seafile
+* https://download.seafile.com/published/seafile-manual/[Manual]
+* https://download.seafile.com/published/seafile-user-manual/[User Manual]

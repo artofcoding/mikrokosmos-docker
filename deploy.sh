@@ -15,6 +15,20 @@ MIKROKOSMOS_DOMAIN=${MIKROKOSMOS_DOMAIN:-local}
 set -o nounset
 set -o errexit
 
+function print_usage {
+  echo "usage: $0 <build-library | build-template | build-all>"
+  echo "usage: $0 <init>"
+  echo "usage: $0 <letsencrypt>"
+  echo "usage: $0 <up | down>"
+  echo "usage: $0 <start | stop> <service1> [<serviceN> ...]"
+  exit 1
+}
+
+if [[ $# == 0 ]]
+then
+  print_usage
+fi
+
 if [[ -z "${MIKROKOSMOS_DOMAIN}" ]]
 then
     echo "MIKROKOSMOS_DOMAIN is not set"
@@ -37,6 +51,7 @@ else
     VERSION="${CURRENT_BRANCH}-${HEAD_COMMIT_HASH}"
 fi
 export VERSION
+
 export CONTAINER_PREFIX
 
 # Container solution
@@ -321,12 +336,7 @@ case "${cmd}" in
             stop "$@"
     ;;
     *)
-        echo "usage: $0 <build-library | build-template | build-all>"
-        echo "usage: $0 <init>"
-        echo "usage: $0 <letsencrypt>"
-        echo "usage: $0 <up | down>"
-        echo "usage: $0 <start | stop> <service1> [<serviceN> ...]"
-        exit 1
+        print_usage
     ;;
 esac
 

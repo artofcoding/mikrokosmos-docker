@@ -42,6 +42,7 @@ systemctl start qemu-ga
 pacman --noconfirm -S sudo
 pacman --noconfirm -S logrotate
 pacman --noconfirm -S git
+pacman --noconfirm -S jq
 
 #
 # SSH
