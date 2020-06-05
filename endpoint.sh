@@ -5,7 +5,11 @@
 # All rights reserved. Use is subject to license terms.
 #
 
-CONTAINER_PREFIX=endpoint
+CONTAINER_PREFIX="endpoint"
+
+#
+# DO NOT MODIFY LINES BELOW
+#
 
 set -o nounset
 set -o errexit

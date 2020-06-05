@@ -2,7 +2,7 @@ include conf.d/host_context_map.nginx;
 
 server {
 
-    listen 80 default_server;
+    listen 80 default_server backlog=4096;
     listen 8080;
     server_name _;
 

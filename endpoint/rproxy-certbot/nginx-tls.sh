@@ -8,7 +8,6 @@
 PROD_DOMAIN="www.example.org"
 QA_DOMAIN="qa.example.org"
 TEST_DOMAIN="test.example.org"
-DEVELOPMENT_DOMAIN="localhost"
 
 #
 # DO NOT MODIFY LINES BELOW
@@ -33,9 +32,6 @@ env=${1:-} ; shift
 mode=${1:-} ; shift
 
 case "${env}" in
-    development)
-        DOMAIN="${DEVELOPMENT_DOMAIN}"
-    ;;
     test)
         DOMAIN="${TEST_DOMAIN}"
     ;;
@@ -75,7 +71,7 @@ case "${mode}" in
             exit 0
         fi
         certbot certonly \
-            --register-unsafely-without-email --agree-tos \
+            --register-unsafely-without-email --agree-tos --no-eff-email \
             --webroot \
             --webroot-path=/usr/share/nginx/certbot \
             -n \

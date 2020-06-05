@@ -4,11 +4,28 @@ upstream repository_upstream {
 
 server {
 
-    listen 80;
+    listen 443 ssl;
     server_name nexus.*;
 
     access_log /proc/self/fd/1 main;
     error_log /proc/self/fd/2 info;
+
+    ssl_certificate /etc/letsencrypt/selfsigned/nexus/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/selfsigned/nexus/privkey.pem;
+    #include /etc/letsencrypt/options-ssl-nginx.conf;
+    #ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers EECDH+AESGCM:EDH+AESGCM;
+    ssl_prefer_server_ciphers on;
+    ssl_ecdh_curve secp384r1;
+    ssl_session_timeout 10m;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_tickets off;
+    #ssl_session_tickets on;
+    #ssl_session_ticket_key /etc/nginx/ssl_session_ticket.key;
+    #ssl_stapling on;
+    #ssl_stapling_verify on;
+    more_set_headers "Strict-Transport-Security: max-age=31536000; includeSubDomains; preload";
 
     gzip on;
     gzip_types      text/plain text/css application/javascript application/json application/xml;

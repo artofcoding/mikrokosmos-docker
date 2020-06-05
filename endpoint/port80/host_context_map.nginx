@@ -32,7 +32,7 @@ map $http_host $context {
     redmine.* /;
     # CICD
     sonarqube.* /;
-    nexus.* /;
+    nexus.* /nexus/;
 
     localhost /app/;
     test.* /app/;
