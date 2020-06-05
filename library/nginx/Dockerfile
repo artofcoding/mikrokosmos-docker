@@ -10,9 +10,8 @@ ENV LANG en_US.UTF-8
 RUN apk update \
     && apk --no-cache add \
         tzdata \
-        nginx \
+        nginx nginx-mod-http-headers-more \
         openssl \
-        certbot-nginx \
         curl \
         git \
     && cp /usr/share/zoneinfo/${TZ} /etc/localtime \
@@ -22,5 +21,5 @@ RUN apk update \
     && git clone https://github.com/h5bp/server-configs-nginx.git /etc/nginx/h5bp \
     && apk del git
 
-VOLUME ["/etc/nginx", "/usr/share/nginx/certbot"]
+VOLUME ["/etc/nginx"]
 CMD ["nginx"]
