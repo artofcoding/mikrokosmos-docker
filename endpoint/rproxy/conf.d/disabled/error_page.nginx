@@ -1,0 +1,7 @@
+error_page 401 /401.code;
+error_page 403 /403.code;
+error_page 404 /404.code;
+error_page 405 /405.code;
+error_page 406 /406.code;
+error_page 412 /412.code;
+error_page 500 502 503 504 /50x.code;
