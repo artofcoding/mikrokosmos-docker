@@ -1,0 +1,11 @@
+FROM registry.access.redhat.com/ubi7/ubi AS base
+
+LABEL maintainer="Ralf Bensmann <ralf@art-of-coding.eu>"
+LABEL vendor="Art of Coding UG"
+LABEL project="Mikrokosmos CICD"
+
+RUN curl -L \
+        https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/script.rpm.sh \
+        | bash \
+    && yum install -y openssh \
+    && yum install -y --skip-broken gitlab-ce

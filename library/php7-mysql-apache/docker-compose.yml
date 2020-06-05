@@ -1,0 +1,23 @@
+version: '3.7'
+
+services:
+  database:
+    image: mysql:5.6
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABSE: php
+      MYSQL_USER: php
+      MYSQL_PASSWORD: php
+  webserver:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    volumes:
+      - ./locale.gen:/etc/locale.gen
+      - ./:/var/www/html
+      - ./docker/webserver/configuration.php:/var/www/html/configuration.php
+      - ./docker/webserver/phpstorm.ini:/usr/local/etc/php/conf.d/phpstorm.ini

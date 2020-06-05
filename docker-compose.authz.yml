@@ -1,0 +1,27 @@
+version: '3.7'
+
+services:
+  vault:
+    build:
+      context: CICD/vault
+    image: mikrokosmos/vault:${VERSION}
+    restart: unless-stopped
+    command: server -config=/opt/vault/config/vault-config.json
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - vault:/opt/vault:rw
+    networks:
+      - mikrokosmos-cicd
+    expose:
+      - 8200
+
+volumes:
+  vault:
+    driver: local
+
+networks:
+  mikrokosmos-cicd:
+    driver: bridge
+    internal: false
+    external: false
