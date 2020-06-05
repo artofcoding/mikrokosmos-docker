@@ -1,4 +1,5 @@
 # Default ignored files
+*.iml
 /.idea/shelf/
 /.idea/workspace.xml
 # Datasource local storage ignored files
@@ -7,3 +8,7 @@
 # Editor-based HTTP Client requests
 /.idea/httpRequests/
 /.idea/sonarlint/
+/.idea/modules.xml
+/.idea/misc.xml
+/.idea/checkstyle-idea.xml
+/.idea/inspectionProfiles/
