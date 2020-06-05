@@ -5,8 +5,9 @@
 # All rights reserved. Use is subject to license terms.
 #
 
-DOCKER_IMAGE_PREFIX=mikrokosmos
-CONTAINERS="redis redis-backup app"
+#
+# DO NOT MODIFY LINES BELOW
+#
 
 set -o nounset
 set -o errexit
@@ -36,28 +37,37 @@ then
     exit 1
 fi
 
-execdir=$(pushd `dirname $0` >/dev/null ; pwd ; popd >/dev/null)
+execdir=$(pushd "$(dirname $0)" >/dev/null ; pwd ; popd >/dev/null)
 basedir=$(pushd "${execdir}/../.." >/dev/null ; pwd ; popd >/dev/null)
 dockerdir=$(pushd "${execdir}/.." >/dev/null ; pwd ; popd >/dev/null)
 etcdir=$(pushd "${execdir}/../etc" >/dev/null ; pwd ; popd >/dev/null)
 vardir=$(pushd "${execdir}/../var" >/dev/null ; pwd ; popd >/dev/null)
 
-ENV_NAME=$(expr `basename $0` : '\(.*\).sh')
+ENV_NAME=$(expr "$(basename $0)" : '\(.*\).sh')
 echo "Environment: ${ENV_NAME}"
-. ${etcdir}/${ENV_NAME}.env
+. "${etcdir}/${ENV_NAME}".env
 
 export ENV_NAME
 export ENV_TYPE
 export USER_ID
 export GROUP_ID
-VERSION=$(cat ${basedir}/.version)
+
+CURRENT_BRANCH="$(git branch --show-current)"
+HEAD_COMMIT_HASH="$(git rev-parse --short HEAD)"
+CURRENT_TAG="$(git --no-pager tag -l --points-at HEAD)"
+if [ -n "${CURRENT_TAG}" ]
+then
+    VERSION="${CURRENT_TAG:1}"
+else
+    VERSION="${CURRENT_BRANCH}-${HEAD_COMMIT_HASH}"
+fi
 export VERSION
 
 function dc() {
     docker-compose \
-        -p ${ENV_NAME} \
-        -f ${dockerdir}/docker-compose.yml \
-        -f ${dockerdir}/docker-compose.${ENV_TYPE}.yml \
+        -p "${ENV_NAME}" \
+        -f "${dockerdir}"/docker-compose.yml \
+        -f "${dockerdir}"/docker-compose."${ENV_TYPE}".yml \
         "$@"
 }
 
@@ -65,37 +75,16 @@ mode=${1:-}
 shift
 case "${mode}" in
     assembly)
-        prjdir=$(pushd ${execdir}/../../ >/dev/null ; pwd ; popd >/dev/null)
+        prjdir=$(pushd "${execdir}"/../../ >/dev/null ; pwd ; popd >/dev/null)
         pushd "${prjdir}" >/dev/null || exit
         ./build.sh assembly
         popd >/dev/null || exit
     ;;
     build-images)
         dc build \
-            --build-arg ENV_NAME=${ENV_NAME} \
-            --build-arg ENV_TYPE=${ENV_TYPE} \
+            --build-arg "ENV_NAME=${ENV_NAME}" \
+            --build-arg "ENV_TYPE=${ENV_TYPE}" \
             --compress
-    ;;
-    clean-images)
-        if [[ $# != 1 ]]
-        then
-            echo "usage: $0 clean-images <tag>"
-            exit 1
-        fi
-        tag=$1
-        set +o errexit
-        for container in ${CONTAINERS}
-        do
-            docker image rm ${DOCKER_IMAGE_PREFIX}/lip-${container}:${tag}
-        done
-        set -o errexit
-    ;;
-    remove)
-        set +o errexit
-        $0 down
-        docker rm -f ${ENV_NAME}_app_1_starter
-        docker volume rm ${ENV_NAME}_app
-        set -o errexit
     ;;
     init)
         $0 build-images
@@ -118,9 +107,19 @@ case "${mode}" in
         dc up -d "$@"
     ;;
     start)
+        if [[ $# -lt 1 ]]
+        then
+            echo "usage: $0 start <service ...>"
+            exit 1
+        fi
         dc start "$@"
     ;;
     stop)
+        if [[ $# -lt 1 ]]
+        then
+            echo "usage: $0 stop <service ...>"
+            exit 1
+        fi
         dc stop "$@"
     ;;
     restart)
@@ -132,12 +131,17 @@ case "${mode}" in
         dc restart "$@"
     ;;
     down)
-        dc down "$@"
+        dc down
     ;;
     ps)
         dc ps
     ;;
     logs)
+        if [[ $# -lt 1 ]]
+        then
+            echo "usage: $0 logs [-f] <service>"
+            exit 1
+        fi
         dc logs "$@"
     ;;
     volumes)
@@ -146,7 +150,8 @@ case "${mode}" in
             echo "usage: $0 volumes <container>"
             exit 1
         fi
-        docker inspect "$1" -f '{{json .Mounts}}' | jq
+        container=$1
+        docker inspect "${container}" -f '{{json .Mounts}}' | jq
     ;;
     exec)
         if [[ $# -lt 1 ]]
@@ -162,7 +167,8 @@ case "${mode}" in
             echo "usage: $0 console <container>"
             exit 1
         fi
-        dc exec "$1" sh
+        container=$1
+        dc exec "${container}" sh
     ;;
     console-broken)
         if [[ $# -lt 1 ]]
@@ -170,31 +176,10 @@ case "${mode}" in
             echo "usage: $0 console-broken <container>"
             exit 1
         fi
+        container=$1
         # TODO container_status=$(docker ps -a --filter name=$1 --format '{{.Status}}')
-        docker commit "$1" "$1_broken" && docker run -it "$1_broken" sh
-    ;;
-    clear-logs)
-        find /var/lib/docker/containers/ -type f -name "*.log" -delete
-    ;;
-    archive-all-logs)
-        for container in $(docker ps -aq)
-        do
-            logfile=$(docker inspect ${container} --format='{{.LogPath}}')
-            container_name=$(docker inspect ${container} --format='{{.Name}}' | sed -Ee 's#/(.*)#\1#')
-            logfile_name=${container_name}-$(date +%Y%m%d_%H%M%S).log
-            echo "Archiving logfile of ${container_name} to ${logfile_name}"
-            mkdir -p ${HOME}/backup
-            sudo cat ${logfile} | gzip -9 >${HOME}/backup/${logfile_name}.gz
-            sudo truncate -s 0 ${logfile}
-        done
-    ;;
-    show-log)
-        if [[ $# -lt 1 ]]
-        then
-            echo "usage: $0 show-log <container>"
-            exit 1
-        fi
-        logfile=$(docker inspect ${container} --format='{{.LogPath}}')
+        docker commit "${container}" "${container}_broken" \
+            && docker run -it "${container}_broken" sh
     ;;
     backup)
         if [[ $# -lt 1 ]]
@@ -203,10 +188,11 @@ case "${mode}" in
             exit 1
         fi
         container=$1
-        backup_container=${container}_backup
-        docker commit --pause=false ${container} ${backup_container}
-        docker save -o ${backup_container}.tar ${backup_container}
-        gzip -9 ${backup_container}.tar
+        backup_container="${container}_backup"
+        docker commit --pause=false "${container}" "${backup_container}"
+        docker save -o "${backup_container}".tar "${backup_container}"
+        gzip -9 "${backup_container}".tar
+        docker rm "${backup_container}"
         # TODO Backup its volumes
         #docker inspect ${container} --format '{{.Mounts}}'
     ;;
