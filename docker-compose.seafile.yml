@@ -1,0 +1,49 @@
+version: '3.7'
+
+services:
+  seafile-db:
+    image: mariadb:10.1
+    container_name: seafile-mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=admin
+      - MYSQL_LOG_CONSOLE=true
+    networks:
+      - seafile
+  seafile-memcached:
+    image: memcached:1.5.6
+    container_name: seafile-memcached
+    entrypoint: memcached -m 256
+    networks:
+      - seafile
+  seafile:
+    build:
+      context: library/seafile
+    image: mikrokosmos/seafile:${VERSION}
+    container_name: seafile
+    ports:
+      - "8000:80"
+      #- "443:443"
+    volumes:
+      - seafile-data:/shared
+    environment:
+      - DB_HOST=seafile-db
+      - DB_ROOT_PASSWD=admin
+      - TIME_ZONE=Europe/Berlin
+      - SEAFILE_ADMIN_EMAIL=me@example.com
+      - SEAFILE_ADMIN_PASSWORD=asecret
+      - SEAFILE_SERVER_LETSENCRYPT=false
+      - SEAFILE_SERVER_HOSTNAME=seafile.local
+    depends_on:
+      - seafile-db
+      - seafile-memcached
+    networks:
+      - seafile
+
+networks:
+  seafile:
+    internal: false
+    external: false
+
+volumes:
+  seafile-data:
+    driver: local
